@@ -1,0 +1,12 @@
+*
+!.gitignore
+!sh
+!sh/shell.c
+!fs
+!fs/ramfs.c
+!Makefile
+!include
+!include/ramfs.h
+!include/shell.h
+!main.c
+!README.md
