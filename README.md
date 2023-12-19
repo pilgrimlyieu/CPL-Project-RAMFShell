@@ -294,11 +294,13 @@ export PATH=/path//to/:$PATH
 
 ##### init_shell
 
-与init_ramfs类似，你可以自由完成shell的初始化，包括读取环境变量等内容。我们在测试代码中会在调用任何shell函数之前调用这个函数。
+在此函数中你需要完成对环境变量的读取与保存。我们的测试代码会在调用任何与环境变量有关的shell函数之前调用这个函数。
+
+换言之，这个函数相当于`source /home/ubuntu/.bashrc`命令。
 
 ##### close_shell
 
-与close_ramfs类似，你需要回收shell不再使用的内存。我们在测试代码中会在不再调用shell函数之后，在close_ramfs之前调用这个函数。
+与close_ramfs类似，你需要回收shell不再使用的内存。我们的测试代码会在不再调用shell函数之后，在close_ramfs之前调用这个函数。
 
 ##### sls
 
