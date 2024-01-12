@@ -240,6 +240,8 @@ read(fd2, buf, 6); //从fd2中读取6个字节存储到buf中
 
 **你需要实现的内容包含：文档中的前两段描述和返回值描述（不用设置errno，但正因如此，为了区分不同的错误，你应该对返回值做出一些与文档描述不同的处理，下文即将提到这一点），关于标志位部分的内容，前文已经为你总结了。你需要对不合理的输入做合适的处理，具体而言，你需要针对文档中`EEXIST`和`ENONENT`（前两个）的描述进行错误处理，请注意，为了简洁起见，你不需要对`EISDIR`进行处理，测试数据保证不会出现此类情况。**
 
+> **更正**：由于O_EXCL不在此次项目考虑范围之内，所以你实际上不需要对EEXIST进行处理；此外，你需要对EINVAL（文件名不合法的条项，即检测是否出现了数字、字母、.之外的字符）进行处理
+
 ##### rseek
 
 该函数对应于[前文](#RefToSysFunc)提到的`lseek`函数，在Linux系统下你可以利用命令`man 2 lseek`查看其文档。
@@ -348,9 +350,12 @@ export PATH=/path//to/:$PATH
 
 由于时间紧张，测试数据暂未出炉，同学们可以先编写代码，如果测试数据准备就绪将会更新文档并在通知群进行通知。
 
+> **更新**：目前给出了两个比较简单的测试用例，其中一个仅测试RAMFS部分的代码，另一个测试RAMFS和Shell部分的代码，数据说明与约定会在所有用例上线后进行说明
+
 ### 数据规模约定
 
 为了便于同学们理解代码框架，这里给出一个简单的冒烟测试：
+> **更正**：为了方便大家理解，这里对测试进行了更多约束，即不会在init_shell之前调用任何与shell相关的函数
 
 #### main.c
 
@@ -366,16 +371,15 @@ const char *ct = "export PATH=/home:$PATH";
 int main() {
   init_ramfs();
 
-  smkdir("/home");
-  smkdir("/home/ubuntu");
-  smkdir("/usr");
-  smkdir("/usr/bin");
-  stouch("/home/ubuntu/.bashrc");
-  rwrite(ropen("/home/ubuntu/.bashrc", O_WRONLY), content, strlen(content));
+  assert(rmkdir("/home") == 0);
+  assert(rmkdir("/home/ubuntu") == 0);
+  assert(rmkdir("/usr") == 0);
+  assert(rmkdir("/usr/bin") == 0);
+  rwrite(ropen("/home/ubuntu/.bashrc", O_CREAT | O_WRONLY), content, strlen(content));
   rwrite(ropen("/home/ubuntu/.bashrc", O_WRONLY | O_APPEND), ct, strlen(ct));
-  scat("/home/ubuntu/.bashrc");
 
   init_shell();
+  scat("/home/ubuntu/.bashrc");
   swhich("ls");
   stouch("/usr/bin/ls");
   swhich("ls");
@@ -395,4 +399,19 @@ int main() {
 
 ### 提交方式
 
-与测试数据说明一并后期更新。
+> **更正**：在你提交代码之前，请务必注意将shell.c的前几行修改为如下：
+```c
+#include "ramfs.h"
+#include "shell.h"
+#ifndef ONLINE_JUDGE
+  #define print(...) printf("\033[31m");printf(__VA_ARGS__);printf("\033[0m");
+#else
+  #define print(...) 
+#endif
+```
+
+推荐在OJ平台上点击提交代码获取TOKEN，然后在Makefile中找到submit目标，在第四行添加（用你获取到的token替换`${your token}`）：
+```makefile
+	$(eval TOKEN := ${your token})
+```
+然后在终端输入`make submit`即可提交。
