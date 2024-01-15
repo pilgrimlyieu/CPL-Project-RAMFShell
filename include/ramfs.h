@@ -2,45 +2,56 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define O_APPEND 02000
-#define O_CREAT 0100
-#define O_TRUNC 01000
-#define O_RDONLY 00
-#define O_WRONLY 01
-#define O_RDWR 02
+// Flags
+#define O_APPEND 02000 // Append:   offset->EOF(default 0); Readable
+#define O_CREAT  00100 // Create:   If Exist, open. Otherwise create.
+#define O_TRUNC  01000 // Truncate: If Exist & Writable, clear.
+#define O_RDONLY 00000 // Read only
+#define O_WRONLY 00001 // Write only
+#define O_RDWR   00002 // Read & Write
+// NOFLAGS: O_RDONLY
+// O_TRUNC  | O_RDONLY (01000) -> O_RDONLY
+// O_RDONLY | O_WRONLY (00001) -> O_WRONLY
+// O_RDWR   | O_WRONLY (00003) -> O_WRONLY
 
 #define SEEK_SET 0
 #define SEEK_CUR 1
 #define SEEK_END 2
 
-typedef struct node {
-  enum { FNODE, DNODE } type;
-  struct node **dirents; // if DTYPE
-  void *content;
-  int nrde;
-  char *name;
-  int size;
-} node;
-
-typedef struct FD {
-  bool used;
-  int offset;
-  int flags;
-  node *f;
-} FD;
-
 typedef intptr_t ssize_t;
 typedef uintptr_t size_t;
 typedef long off_t;
+typedef int fd_t;
+typedef int flags_t;
+typedef int whence_t;
+typedef int stat;
 
-int ropen(const char *pathname, int flags);
-int rclose(int fd);
-ssize_t rwrite(int fd, const void *buf, size_t count);
-ssize_t rread(int fd, void *buf, size_t count);
-off_t rseek(int fd, off_t offset, int whence);
+typedef struct Node {
+    enum {FILE, DIR} type;
+    char *name;
+    int size;
+    // FILE
+    void *content;
+    // DIR
+    int nchilds;
+    struct Node **childs;
+} Node;
+
+typedef struct Handle {
+    bool used;
+    off_t offset;
+    flags_t flags;
+    Node *f;
+} Handle;
+
+stat ropen(const char *pathname, flags_t flags);
+stat rclose(fd_t fd);
+ssize_t rwrite(fd_t fd, const void *buf, size_t count);
+ssize_t rread(fd_t fd, void *buf, size_t count);
+off_t rseek(fd_t fd, off_t offset, whence_t whence);
 int rmkdir(const char *pathname);
 int rrmdir(const char *pathname);
 int runlink(const char *pathname);
 void init_ramfs();
 void close_ramfs();
-node *find(const char *pathname);
+Node *find(const char *pathname);
