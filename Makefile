@@ -1,6 +1,7 @@
 .PHONY: all run binary clean submit git gdb
 
 INC_PATH := include/
+TOKEN := $(shell cat TOKEN)
 
 all: compile
 
