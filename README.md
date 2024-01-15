@@ -514,7 +514,7 @@ int main() {
   assert(stouch("/home/1") == 0);
   assert(smkdir("/home/1/1") == 1);
   assert(stouch("/test/1") == 1);
-  assert(swhich("notexist"));
+  assert(swhich("notexist") == 1);
 
   close_shell();
   close_ramfs();
