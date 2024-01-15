@@ -320,6 +320,8 @@ export PATH=/path//to/:$PATH
 
 对应于`ls`命令，你可以使用命令`man ls`查看其文档，**我们保证传入参数仅含一个绝对地址**，你需要打印命令执行的结果，如果输入不合法，你的结果应该为`No such file or directory`，你可以尝试自己执行ls命令以查看对于不合法输入的具体返回内容，此后不再赘述。
 
+> **更新**：如果传入的字符串是一个空串该怎么办？你不妨ls试一下，由于我们没有引入cd命令，所以shell总是处于根目录上
+
 ##### scat
 
 对应于`cat`命令，你可以使用命令`man cat`查看其文档，**我们保证传入参数仅含一个绝对地址**，你需要打印命令执行的结果，如果输入不合法，你的结果应该为`No such file or directory`或`Is a directory`。
@@ -411,6 +413,8 @@ $(eval TOKEN := ${your token})
 
 #### 样例1
 
+综合测试
+
 main.c:
 
 ~~~~c
@@ -487,12 +491,55 @@ $PATH is /home:/usr/bin/
 
 #### 样例2
 
-> 更新了数据点的性质，看看大家的情况再更新
+为方便大家了解shell的命令都应该如何报错，这里给出一个样例
 
 main.c:
 
 ~~~~c
+#include "ramfs.h"
+#include "shell.h"
+#include <string.h>
+#include <stdlib.h>
+#include <assert.h>
+
+int main() {
+  init_ramfs();
+  init_shell();
+  
+  assert(sls("/home") == 1);
+  assert(scat("/home/ubuntu/.bashrc") == 1);
+  assert(scat("/") == 1);
+  assert(smkdir("/home") == 0);
+  assert(smkdir("/test/1") == 1);
+  assert(stouch("/home/1") == 0);
+  assert(smkdir("/home/1/1") == 1);
+  assert(stouch("/test/1") == 1);
+  assert(swhich("notexist"));
+
+  close_shell();
+  close_ramfs();
+}
 ~~~~
 
 期望输出:
+
+~~~~
+ls /home
+ls: cannot access '/home': No such file or directory
+cat /home/ubuntu/.bashrc
+cat: cannot access '/home/ubuntu/.bashrc': No such file or directory
+cat /
+cat: /: Is a directory
+mkdir /home
+mkdir /test/1
+mkdir: cannot create directory '/test/1': No such file or directory
+touch /home/1
+mkdir /home/1/1
+mkdir: cannot create directory '/home/1/1': File exists
+touch /test/1
+touch: cannot touch '/test/1': No such file or directory
+which notexist
+~~~~
+
+
 
