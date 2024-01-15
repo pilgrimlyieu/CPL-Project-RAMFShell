@@ -56,7 +56,7 @@ Linux的文件系统结构采用了树形结构，具体描述如下：
 
 可以看到，在根⽬录下⼀共有3个项⽬：两个⽂件，⼀个⽬录dir，⽽dir下还可以拥有两个⽂件。右侧的字符串称为对象的“绝对路径”。
 
-需要注意的是，在Linux系统下，如果绝对路径指示目录，则它的每一个/都可以被替换为多余的数个/，两者表意相同，且末尾也可以添加数个/，例如///dir////；如果绝对路径指示文件，则除了末尾不可以添加/，否则视为目录，路径中间的所有/都可以冗余，例如///dir///1.txt。你不妨自行在Linux环境下尝试这一点，但是需要指出的是，Linux系统会对/和//进行区分，但实际上却是同一目录**，在本次项目中，我们不考虑//的存在，一律视为/，同时，本次项目中的目录与文件名如果含有字母，数字和`.`均视为非法取值**。
+需要注意的是，在Linux系统下，如果绝对路径指示目录，则它的每一个/都可以被替换为多余的数个/，两者表意相同，且末尾也可以添加数个/，例如///dir////；如果绝对路径指示文件，则除了末尾不可以添加/，否则视为目录，路径中间的所有/都可以冗余，例如///dir///1.txt。你不妨自行在Linux环境下尝试这一点，但是需要指出的是，Linux系统会对/和//进行区分，但实际上却是同一目录**，在本次项目中，我们不考虑//的存在，一律视为/，同时，本次项目中的目录与文件名如果含有字母，数字和`.`之外的字符均视为非法取值**。
 
 $\color{red}⚠在本次项目中，关于文件系统的部分沿用上述说明。并且不用考虑相对路径 (.和..)，所有输入均为绝对路径。$
 
@@ -226,7 +226,7 @@ read(fd2, buf, 6); //从fd2中读取6个字节存储到buf中
 
 该函数对应于[前文](#RefToSysFunc)提到的`rmdir`函数，在Linux系统下你可以利用命令`man 2 rmdir`查看其文档。
 
-**你需要实现的内容包含：文档中的完整描述（就一句话）。请特别关注返回值描述（不用设置errno），并对不合理的输入做合适的处理，具体而言，你需要针对文档中`ENONENT`,`ENOTDIR`,`ENOTEMPTY`,`EACCESS`（为什么`EACCESS`反文档顺序？）的描述进行错误处理。**
+**你需要实现的内容包含：文档中的完整描述（就一句话）。请特别关注返回值描述（不用设置errno），并对不合理的输入做合适的处理，具体而言，你需要针对文档中`ENONENT`,`ENOTDIR`,`ENOTEMPTY`,`EACCESS`（只用考虑一个特殊情况）的描述进行错误处理。**
 
 ##### rmkdir
 
@@ -239,6 +239,8 @@ read(fd2, buf, 6); //从fd2中读取6个字节存储到buf中
 该函数对应于[前文](#RefToSysFunc)提到的`open`函数，在Linux系统下你可以利用命令`man 2 open`查看其文档。
 
 **你需要实现的内容包含：文档中的前两段描述和返回值描述（不用设置errno，但正因如此，为了区分不同的错误，你应该对返回值做出一些与文档描述不同的处理，下文即将提到这一点），关于标志位部分的内容，前文已经为你总结了。你需要对不合理的输入做合适的处理，具体而言，你需要针对文档中`EEXIST`和`ENONENT`（前两个）的描述进行错误处理，请注意，为了简洁起见，你不需要对`EISDIR`进行处理，测试数据保证不会出现此类情况。**
+
+> **更正**：由于O_EXCL不在此次项目考虑范围之内，所以你实际上不需要对EEXIST进行处理；此外，你需要对EINVAL（文件名不合法的条项，即检测是否出现了数字、字母、.之外的字符）进行处理
 
 ##### rseek
 
@@ -276,7 +278,17 @@ read(fd2, buf, 6); //从fd2中读取6个字节存储到buf中
 
 此次项目中我们仅讨论`PATH`环境变量，它是一个类似于链表的结构，它的每一个节点都由一条指向目录的绝对路径组成，当用户在Shell中输入一个非绝对路径或相对路径，即不以`/`或`./`开头的命令时，Shell会在这个链表中逐一搜索，查看节点对应的绝对路径目录下是否存在相同名称的可执行文件，如果找到，就停止搜索，并执行对应的可执行文件。例如，ls命令实际上执行的是/usr/bin/ls。
 
+> **更正**：注意这里的语义是非(绝对路径或相对路径)
+
 **在本次项目中，你的Shell需要先读取/home/ubuntu/.bashrc文件（即Shell的配置文件），识别并保存其中的内容**。值得指出的是，Shell的配置文件语法并不完全相同，内容也并不只包含对环境变量的设置，感兴趣的同学可以自行研究。这里我们以bash的配置文件语法为标准，并保证.bashrc文件中仅包含对`PATH`的设置，其设置语法如下：
+
+> **更新**：添加了下面这个设置环境变量的语法
+```bash
+export PATH=/path/to
+```
+表示将PATH设置为`/path/to`，数据保证此设置至少在文件的开头出现一次。
+
+****
 
 ```bash
 export PATH=$PATH:/path/to/
@@ -294,9 +306,9 @@ export PATH=/path//to/:$PATH
 
 ##### init_shell
 
-在此函数中你需要完成对环境变量的读取与保存。我们的测试代码会在调用任何与环境变量有关的shell函数之前调用这个函数。
+> **更正**：读一下这句话就知道了
 
-换言之，这个函数相当于`source /home/ubuntu/.bashrc`命令。
+在此函数中你需要完成对环境变量的读取与保存。我们的测试代码会在调用任何shell函数之前调用这个函数。
 
 ##### close_shell
 
@@ -346,53 +358,141 @@ export PATH=/path//to/:$PATH
 
 ## 提交说明
 
-由于时间紧张，测试数据暂未出炉，同学们可以先编写代码，如果测试数据准备就绪将会更新文档并在通知群进行通知。
+### 数据约定
 
-### 数据规模约定
+本题一共由15个测试用例组成，其中0-9为内存文件系统部分的测试，10-14为Shell部分的测试，其中第0个测试点和第14个测试点为诚信测试，即你几乎什么都不用干（第14个测试点需要你对不含$的字符串完成echo操作）就可以得分。
 
-为了便于同学们理解代码框架，这里给出一个简单的冒烟测试：
+#### 内存文件系统部分
 
-#### main.c
+整个⽂件系统同时存在的所有⽂件内容不会超过 512 MiB（不含已经删去的⽂件和数据），给予 1GiB 的内存限制。 同时存在的⽂件与⽬录不会超过 65536 个。 同时活跃着的⽂件描述符不会超过 4096 个。 
 
+对于所有数据点，⽂件操作读写的总字节数不会超过 10GiB。时限将给到⼀个⾮常可观的量级。错误将会分散在各个数据点中，你需要保证你的 API 能正确地判断错误的情况并按照要求的返回值退出。各数据点的性质：
+
+1. 如原始的 main.c 
+2. 根⽬录下少量⽂件创建 + ropen + rwrite + rclose 
+3. 在 2 的基础上，测试 O_APPEND，rseek 
+4. 在 3 的基础上扩⼤规模 
+5. 少量⼦⽬录创建（<= 5 层）+ ⽂件创建与随机读写 
+6. 在 5 的基础上，测试 rrmdir, runlink。 
+7. ⼤⽂件测试。多 fd 对少量⼤⽂件⼤量读写 + rseek + O_TRUNCATE 
+8. 复杂的⽂件树结构测试。⼤量的 O_CREAT，rmkdir, rrmdir, runlink。少量读写 
+9. ⽂件描述符管理测试。⼤量 ropen、rclose，多 fd 单⽂件 
+
+#### Shell部分
+
+数据规模沿用内存文件系统部分的说明，下面对各测试点的性质进行说明：
+
+10. 多层目录和文件的混合创建（smkdir <= 3 层），以及ls命令的实现（你不需要考虑ls的输出顺序，we have special judge）
+11. 创建文件，读写文件，环境变量综合测试
+12. 在11的基础上加强对环境变量的拷打（注意关注export语法新增了一条规则）
+13. 集中测试各种错误的处理是否正确
+
+### 提交方式
+
+> **更正**：在你提交代码之前，请务必注意将shell.c的前几行修改为如下：
 ```c
 #include "ramfs.h"
 #include "shell.h"
-#include <assert.h>
-#include <string.h>
+#ifndef ONLINE_JUDGE
+  #define print(...) printf("\033[31m");printf(__VA_ARGS__);printf("\033[0m");
+#else
+  #define print(...) 
+#endif
+```
 
-extern node *root;
-const char *content = "export PATH=$PATH:/usr/bin/\n";
+推荐在OJ平台上点击提交代码获取TOKEN，然后在Makefile中找到submit目标，在第四行添加（用你获取到的token替换`${your token}`）：
+
+```makefile
+$(eval TOKEN := ${your token})
+```
+然后在终端输入`make submit`即可提交。
+
+### 测试样例
+
+#### 样例1
+
+main.c:
+
+~~~~c
+#include "ramfs.h"
+#include "shell.h"
+#include <string.h>
+#include <stdlib.h>
+#include <assert.h>
+
+const char *content = "export PATH=/usr/bin/\n";
 const char *ct = "export PATH=/home:$PATH";
 int main() {
   init_ramfs();
 
-  smkdir("/home");
-  smkdir("/home/ubuntu");
-  smkdir("/usr");
-  smkdir("/usr/bin");
-  stouch("/home/ubuntu/.bashrc");
-  rwrite(ropen("/home/ubuntu/.bashrc", O_WRONLY), content, strlen(content));
-  rwrite(ropen("/home/ubuntu/.bashrc", O_WRONLY | O_APPEND), ct, strlen(ct));
-  scat("/home/ubuntu/.bashrc");
+  assert(rmkdir("/home") == 0);
+  assert(rmkdir("//home") == -1);
+  assert(rmkdir("/test/1") == -1);
+  assert(rmkdir("/home/ubuntu") == 0);
+  assert(rmkdir("/usr") == 0);
+  assert(rmkdir("/usr/bin") == 0);
+  assert(rwrite(ropen("/home///ubuntu//.bashrc", O_CREAT | O_WRONLY), content, strlen(content)) == strlen(content));
+  
+  int fd = ropen("/home/ubuntu/.bashrc", O_RDONLY);
+  char buf[105] = {0};
+
+  assert(rread(fd, buf, 100) == strlen(content));
+  assert(!strcmp(buf, content));
+  assert(rwrite(ropen("/home////ubuntu//.bashrc", O_WRONLY | O_APPEND), ct, strlen(ct)) == strlen(ct));
+  memset(buf, 0, sizeof(buf));
+  assert(rread(fd, buf, 100) == strlen(ct));
+  assert(!strcmp(buf, ct));
+  assert(rseek(fd, 0, SEEK_SET) == 0);
+  memset(buf, 0, sizeof(buf));
+  assert(rread(fd, buf, 100) == strlen(content) + strlen(ct));
+  char ans[205] = {0};
+  strcat(ans, content);
+  strcat(ans, ct);
+  assert(!strcmp(buf, ans));
 
   init_shell();
-  swhich("ls");
-  stouch("/usr/bin/ls");
-  swhich("ls");
-  stouch("/home/ls");
-  swhich("ls");
-  secho("hello world");
-  secho("The Environment Variable PATH is:$PATH");
-  secho("The Environment Variable PATH is:\\$PATH");
-  close_ramfs();
+
+  assert(scat("/home/ubuntu/.bashrc") == 0);
+  assert(stouch("/home/ls") == 0);
+  assert(stouch("/home///ls") == 0);
+  assert(swhich("ls") == 0);
+  assert(stouch("/usr/bin/ls") == 0);
+  assert(swhich("ls") == 0);
+  assert(secho("hello world\\n") == 0);
+  assert(secho("\\$PATH is $PATH") == 0);
+
   close_shell();
-  assert(root==NULL);
+  close_ramfs();
 }
+~~~~
 
-```
+期望输出：
 
-用这份代码替换main.c后使用`make run`命令即可运行测试，你也可以仿照最后一行代码添加更多的assert，我们在测试中也会使用这个函数。
+~~~~bash
+cat /home/ubuntu/.bashrc
+export PATH=/usr/bin/
+export PATH=/home:$PATH
+touch /home/ls
+touch /home///ls
+which ls
+/home/ls
+touch /usr/bin/ls
+which ls
+/home/ls
+echo hello world\n
+hello worldn
+echo \$PATH is $PATH
+$PATH is /home:/usr/bin/
+~~~~
 
-### 提交方式
+#### 样例2
 
-与测试数据说明一并后期更新。
+> 更新了数据点的性质，看看大家的情况再更新
+
+main.c:
+
+~~~~c
+~~~~
+
+期望输出:
+
