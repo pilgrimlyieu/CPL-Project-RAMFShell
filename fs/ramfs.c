@@ -17,40 +17,44 @@ Node* find(const char* pathname) {
     char *element = strtok(path, "/");
     while (element != NULL) {
         int index = existed_index(current, element);
-        if (index == -1) {
+        if (index == FAILURE) {
+            free(path);
             return NULL;
         }
         current = current->childs[index];
         element = strtok(NULL, "/");
     }
+    free(path);
     return current;
 }
 
 Node* find_parent(const char* pathname) {
     Node *current = root;
+    Node *parent = NULL;
     char *path = malloc(strlen(pathname) + 1);
     strcpy(path, pathname);
     char *element = strtok(path, "/");
-    char *parent = NULL;
     while (element != NULL) {
+        parent = current;
         int index = existed_index(current, element);
-        if (index == -1) {
-            return NULL;
+        if (index == FAILURE) {
+            break;
         }
         current = current->childs[index];
-        parent = element;
         element = strtok(NULL, "/");
     }
-    return current;
+    free(path);
+    return parent;
 }
 
-char* get_basename(const char* pathname) {
+char* get_basename(char* pathname) {
     char *last_slash = strrchr(pathname, '/');
     return last_slash ? last_slash + 1 : pathname;
 }
 
 bool is_valid_name(const char* name) {
-    for (int i = 0; i < strlen(name); i++) {
+    size_t len = strlen(name);
+    for (int i = 0; i < len; i++) {
         if (!isalnum(name[i]) && name[i] != '.') {
             return false;
         }
@@ -65,20 +69,22 @@ bool is_valid_path(const char* pathname) {
 }
 
 int existed_index(const Node *dir, const char* name) {
-    for (int i = 0; i < dir->nchilds; i++) {
-        if (strcmp(dir->childs[i]->name, name) == 0) {
-            return i;
+    if (dir->type == D) {
+        for (int i = 0; i < dir->nchilds; i++) {
+            if (strcmp(dir->childs[i]->name, name) == 0) {
+                return i;
+            }
         }
     }
-    return -1;
+    return FAILURE;
 }
 
 stat create_dir(Node* parent, const char* name) {
-    if (existed_index(parent, name) == -1) {
-        return 1;
+    if (existed_index(parent, name) != FAILURE) {
+        return FAILURE;
     }
     Node *dir = malloc(sizeof(Node));
-    dir->type = DIR;
+    dir->type = D;
     dir->name = malloc(strlen(name) + 1);
     strcpy(dir->name, name);
     dir->nchilds = 0;
@@ -86,7 +92,7 @@ stat create_dir(Node* parent, const char* name) {
     parent->nchilds++;
     parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node *));
     parent->childs[parent->nchilds - 1] = dir;
-    return 0;
+    return SUCCESS;
 }
 
 
@@ -133,7 +139,12 @@ off_t rseek(fd_t fd, off_t offset, whence_t whence) { // Reposition read/write f
 // ENOENT:  A directory component in `pathname` does not exist.
 // ENOTDIR: A component used as a directory in `pathname` is not a directory.
 stat rmkdir(const char* pathname) { // Create a directory.
-
+    Node *parent = find_parent(pathname);
+    char *name = get_basename((char*)pathname);
+    if (parent == NULL || !is_valid_name(name) || create_dir(parent, name) != SUCCESS) { // ENOENT, ENOTDIR; EINVAL; EEXIST
+        return FAILURE;
+    }
+    return SUCCESS;
 }
 
 // ERRORS
@@ -153,6 +164,12 @@ stat runlink(const char* pathname) { // Delete a file.
 }
 
 void init_ramfs() {
+    root = malloc(sizeof(Node));
+    root->type = D;
+    root->name = malloc(2);
+    strcpy(root->name, "/");
+    root->nchilds = 0;
+    root->childs = NULL;
 }
 
 void close_ramfs() {

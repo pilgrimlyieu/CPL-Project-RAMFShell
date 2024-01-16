@@ -18,6 +18,9 @@
 #define SEEK_CUR 1
 #define SEEK_END 2
 
+#define SUCCESS 0
+#define FAILURE -1
+
 typedef intptr_t ssize_t;
 typedef uintptr_t size_t;
 typedef long off_t;
@@ -27,7 +30,7 @@ typedef int whence_t;
 typedef int stat;
 
 typedef struct Node {
-    enum {FILE, DIR} type;
+    enum {F, D} type;
     char *name;
     // FILE
     int size;
@@ -38,10 +41,10 @@ typedef struct Node {
 } Node;
 
 typedef struct Handle {
-    bool used;
     off_t offset;
-    flags_t flags;
     Node *f;
+    flags_t flags;
+    bool used;
 } Handle;
 
 stat ropen(const char* pathname, flags_t flags);
@@ -55,3 +58,5 @@ stat runlink(const char* pathname);
 void init_ramfs();
 void close_ramfs();
 Node* find(const char* pathname);
+
+int existed_index(const Node *dir, const char *name);
