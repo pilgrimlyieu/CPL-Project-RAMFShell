@@ -29,8 +29,8 @@ typedef int stat;
 typedef struct Node {
     enum {FILE, DIR} type;
     char *name;
-    int size;
     // FILE
+    int size;
     void *content;
     // DIR
     int nchilds;
@@ -44,14 +44,14 @@ typedef struct Handle {
     Node *f;
 } Handle;
 
-stat ropen(const char *pathname, flags_t flags);
+stat ropen(const char* pathname, flags_t flags);
 stat rclose(fd_t fd);
 ssize_t rwrite(fd_t fd, const void *buf, size_t count);
 ssize_t rread(fd_t fd, void *buf, size_t count);
 off_t rseek(fd_t fd, off_t offset, whence_t whence);
-int rmkdir(const char *pathname);
-int rrmdir(const char *pathname);
-int runlink(const char *pathname);
+stat rmkdir(const char* pathname);
+stat rrmdir(const char* pathname);
+stat runlink(const char* pathname);
 void init_ramfs();
 void close_ramfs();
-Node *find(const char *pathname);
+Node* find(const char* pathname);

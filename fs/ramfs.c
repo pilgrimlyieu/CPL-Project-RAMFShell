@@ -10,14 +10,90 @@ Node *root = NULL;
 #define NRFD 4096
 Handle Handles[NRFD];
 
-Node *find(const char *pathname) {
-    return NULL;
+Node* find(const char* pathname) {
+    Node *current = root;
+    char *path = malloc(strlen(pathname) + 1);
+    strcpy(path, pathname);
+    char *element = strtok(path, "/");
+    while (element != NULL) {
+        int index = existed_index(current, element);
+        if (index == -1) {
+            return NULL;
+        }
+        current = current->childs[index];
+        element = strtok(NULL, "/");
+    }
+    return current;
 }
+
+Node* find_parent(const char* pathname) {
+    Node *current = root;
+    char *path = malloc(strlen(pathname) + 1);
+    strcpy(path, pathname);
+    char *element = strtok(path, "/");
+    char *parent = NULL;
+    while (element != NULL) {
+        int index = existed_index(current, element);
+        if (index == -1) {
+            return NULL;
+        }
+        current = current->childs[index];
+        parent = element;
+        element = strtok(NULL, "/");
+    }
+    return current;
+}
+
+char* get_basename(const char* pathname) {
+    char *last_slash = strrchr(pathname, '/');
+    return last_slash ? last_slash + 1 : pathname;
+}
+
+bool is_valid_name(const char* name) {
+    for (int i = 0; i < strlen(name); i++) {
+        if (!isalnum(name[i]) && name[i] != '.') {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool is_valid_path(const char* pathname) {
+    const char *valid_char = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./";
+    size_t valid = strcspn(pathname, valid_char);
+    return valid == strlen(pathname);
+}
+
+int existed_index(const Node *dir, const char* name) {
+    for (int i = 0; i < dir->nchilds; i++) {
+        if (strcmp(dir->childs[i]->name, name) == 0) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+stat create_dir(Node* parent, const char* name) {
+    if (existed_index(parent, name) == -1) {
+        return 1;
+    }
+    Node *dir = malloc(sizeof(Node));
+    dir->type = DIR;
+    dir->name = malloc(strlen(name) + 1);
+    strcpy(dir->name, name);
+    dir->nchilds = 0;
+    dir->childs = NULL;
+    parent->nchilds++;
+    parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node *));
+    parent->childs[parent->nchilds - 1] = dir;
+    return 0;
+}
+
 
 // ERRORS
 // EINVAL:  The final component(basename) of `pathname` is invalid.
 // ENONENT: O_CREAT is not set and the named file does not exist.
-stat ropen(const char *pathname, flags_t flags) { // Open and possibly create a file.
+stat ropen(const char* pathname, flags_t flags) { // Open and possibly create a file.
 
 }
 
@@ -42,9 +118,9 @@ ssize_t rread(fd_t fd, void *buf, size_t count) { // Read from a file descriptor
 }
 
 // `whence`
-// SEEK_SET: The file offset is set to `offset` bytes.
-// SEEK_CUR: The file offset is set to its current location plus `offset` bytes.
-// SEEK_END: The file offset is set to the size of the file plus `offset` bytes.
+// SEEK_SET (0): The file offset is set to `offset` bytes.
+// SEEK_CUR (1): The file offset is set to its current location plus `offset` bytes.
+// SEEK_END (2): The file offset is set to the size of the file plus `offset` bytes.
 // ERRORS
 // EINVAL: `whence` is not valid.
 off_t rseek(fd_t fd, off_t offset, whence_t whence) { // Reposition read/write file offset.
@@ -56,7 +132,7 @@ off_t rseek(fd_t fd, off_t offset, whence_t whence) { // Reposition read/write f
 // EINVAL:  The final component(basename) of the new directory's pathname is invalid.
 // ENOENT:  A directory component in `pathname` does not exist.
 // ENOTDIR: A component used as a directory in `pathname` is not a directory.
-stat rmkdir(const char *pathname) { // Create a directory.
+stat rmkdir(const char* pathname) { // Create a directory.
 
 }
 
@@ -65,19 +141,18 @@ stat rmkdir(const char *pathname) { // Create a directory.
 // ENOTDIR:   `pathname`, or a component used as a directory in `pathname`, is not a directory.
 // ENOTEMPTY: `pathname` is not empty.
 // EACCESS:   Write access to the directory containing `pathname` was not allowed, or one of the directories in the path prefix of `pathname` did not allow search permission.
-stat rrmdir(const char *pathname) { // Delete a directory.
+stat rrmdir(const char* pathname) { // Delete a directory.
 
 }
 
 // ERRORS
 // EISDIR: `pathname` refers to a directory.
 // ENOENT: A component in `pathname` does not exist or `pathname` is empty.
-stat runlink(const char *pathname) { // Delete a file.
+stat runlink(const char* pathname) { // Delete a file.
 
 }
 
 void init_ramfs() {
-
 }
 
 void close_ramfs() {
