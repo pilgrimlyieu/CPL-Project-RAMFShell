@@ -419,6 +419,91 @@ $(eval TOKEN := ${your token})
 
 #### 样例1
 
+由于shell在文件系统的基础之上，所以放出较全面的文件系统样例：
+
+main.c
+
+~~~~c
+#include "ramfs.h"
+#include "shell.h"
+#include <string.h>
+#include <stdlib.h>
+#include <assert.h>
+
+int notin(int fd, int *fds, int n) {
+    for (int i = 0; i < n; i++) {
+    if (fds[i] == fd) return 0;
+    }
+    return 1;
+}
+int genfd(int *fds, int n) {
+    for (int i = 0; i < 4096; i++) {
+    if (notin(i, fds, n))
+    return i;
+    }
+    return -1;
+}
+int main() {
+    init_ramfs();
+    int fd[10];
+    int buf[10];
+    assert(ropen("/abc==d", O_CREAT) == -1);
+    assert((fd[0] = ropen("/0", O_RDONLY)) == -1);
+    assert((fd[0] = ropen("/0", O_CREAT | O_WRONLY)) >= 0);
+    assert((fd[1] = ropen("/1", O_CREAT | O_WRONLY)) >= 0);
+    assert((fd[2] = ropen("/2", O_CREAT | O_WRONLY)) >= 0);
+    assert((fd[3] = ropen("/3", O_CREAT | O_WRONLY)) >= 0);
+    assert(rread(fd[0], buf, 1) == -1);
+    assert(rread(fd[1], buf, 1) == -1);
+    assert(rread(fd[2], buf, 1) == -1);
+    assert(rread(fd[3], buf, 1) == -1);
+    for (int i = 0; i < 100; i++) {
+      assert(rwrite(fd[0], "\0\0\0\0\0", 5) == 5);
+      assert(rwrite(fd[1], "hello", 5) == 5);
+      assert(rwrite(fd[2], "world", 5) == 5);
+      assert(rwrite(fd[3], "\x001\x002\x003\x0fe\x0ff", 5) == 5);
+    }
+    assert(rclose(fd[0]) == 0);
+    assert(rclose(fd[1]) == 0);
+    assert(rclose(fd[2]) == 0);
+    assert(rclose(fd[3]) == 0);
+    assert(rclose(genfd(fd, 4)) == -1);
+    assert((fd[0] = ropen("/0", O_CREAT | O_RDONLY)) >= 0);
+    assert((fd[1] = ropen("/1", O_CREAT | O_RDONLY)) >= 0);
+    assert((fd[2] = ropen("/2", O_CREAT | O_RDONLY)) >= 0);
+    assert((fd[3] = ropen("/3", O_CREAT | O_RDONLY)) >= 0);
+    assert(rwrite(fd[0], buf, 1) == -1);
+    assert(rwrite(fd[1], buf, 1) == -1);
+    assert(rwrite(fd[2], buf, 1) == -1);
+    assert(rwrite(fd[3], buf, 1) == -1);
+    for (int i = 0; i < 50; i++) {
+      assert(rread(fd[0], buf, 10) == 10);
+      assert(memcmp(buf, "\0\0\0\0\0\0\0\0\0\0", 10) == 0);
+      assert(rread(fd[1], buf, 10) == 10);
+      assert(memcmp(buf, "hellohello", 10) == 0);
+      assert(rread(fd[2], buf, 10) == 10);
+      assert(memcmp(buf, "worldworld", 10) == 0);
+      assert(rread(fd[3], buf, 10) == 10);
+      assert(memcmp(buf, "\x001\x002\x003\x0fe\x0ff\x001\x002\x003\x0fe\x0ff", 10) == 0);
+    }
+    assert(rread(fd[0], buf, 10) == 0);
+    assert(rread(fd[1], buf, 10) == 0);
+    assert(rread(fd[2], buf, 10) == 0);
+    assert(rread(fd[3], buf, 10) == 0);
+    assert(rclose(fd[0]) == 0);
+    assert(rclose(fd[1]) == 0);
+    assert(rclose(fd[2]) == 0);
+    assert(rclose(fd[3]) == 0);
+    return 0;
+}
+~~~~
+
+期望输出：
+
+除了commit信息之外没有任何输出
+
+#### 样例2
+
 综合测试
 
 main.c:
@@ -495,7 +580,7 @@ echo \$PATH is $PATH
 $PATH is /home:/usr/bin/
 ~~~~
 
-#### 样例2
+#### 样例3
 
 为方便大家了解shell的命令都应该如何报错，这里给出一个样例
 
@@ -546,6 +631,3 @@ touch /test/1
 touch: cannot touch '/test/1': No such file or directory
 which notexist
 ~~~~
-
-
-
