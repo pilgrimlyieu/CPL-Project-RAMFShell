@@ -47,9 +47,20 @@ Node* find_parent(const char* pathname) {
     return parent;
 }
 
-char* get_basename(char* pathname) {
-    char *last_slash = strrchr(pathname, '/');
-    return last_slash ? last_slash + 1 : pathname;
+char* get_basename(const char* pathname) {
+    char *start = (char*)pathname + strlen(pathname) - 1;
+    int len = 0;
+    while (start >= pathname && *start == '/') {
+        start--;
+    }
+    while (start >= pathname && *start != '/') {
+        len++;
+        start--;
+    }
+    char *basename = malloc(len + 1);
+    strncpy(basename, start + 1, len);
+    basename[len] = '\0';
+    return basename;
 }
 
 bool is_valid_name(const char* name) {
@@ -140,7 +151,7 @@ off_t rseek(fd_t fd, off_t offset, whence_t whence) { // Reposition read/write f
 // ENOTDIR: A component used as a directory in `pathname` is not a directory.
 stat rmkdir(const char* pathname) { // Create a directory.
     Node *parent = find_parent(pathname);
-    char *name = get_basename((char*)pathname);
+    char *name = get_basename(pathname);
     if (parent == NULL || !is_valid_name(name) || create_dir(parent, name) != SUCCESS) { // ENOENT, ENOTDIR; EINVAL; EEXIST
         return FAILURE;
     }
