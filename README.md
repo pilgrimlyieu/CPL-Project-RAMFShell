@@ -220,25 +220,25 @@ read(fd2, buf, 6); //从fd2中读取6个字节存储到buf中
 
 > 你可以自行搜索学习如何在该界面下浏览文档内容，也可以通过重定向`man 2 unlink > unlink.txt`并将unlink.txt文件复制到图形界面下更好地阅读，也可以在互联网上搜索相关文档（但你无法保证互联网上的描述是正确的，同理，请尽可能阅读手册原文而不要阅读翻译）。各个函数文档的查看方式大同小异，此段话在之后的函数中将不再赘述。
 
-**你需要实现的内容包含：仅文档中有关文件的部分，不需要考虑是否有文件描述符正在使用该文件，测试数据保证不会再使用和已经被删去的文件相关的文件描述符。请特别关注返回值描述（不用设置errno），并对不合理的输入做合适的处理，具体而言，你需要针对文档中`EISDIR`和`ENOENT`（不需要处理dangling symbolic link，该内存文件系统中也不存在这个东西）的描述进行错误处理。**
+**你需要实现的内容包含：仅文档中有关文件的部分，不需要考虑是否有文件描述符正在使用该文件，测试数据保证不会再使用和已经被删去的文件相关的文件描述符。请特别关注返回值描述，并对不合理的输入做合适的处理，具体而言，你需要针对文档中`EISDIR`和`ENOENT`（不需要处理dangling symbolic link，该内存文件系统中也不存在这个东西）的描述进行错误处理。**
 
 ##### rrmdir
 
 该函数对应于[前文](#RefToSysFunc)提到的`rmdir`函数，在Linux系统下你可以利用命令`man 2 rmdir`查看其文档。
 
-**你需要实现的内容包含：文档中的完整描述（就一句话）。请特别关注返回值描述（不用设置errno），并对不合理的输入做合适的处理，具体而言，你需要针对文档中`ENONENT`,`ENOTDIR`,`ENOTEMPTY`,`EACCESS`（只用考虑一个特殊情况）的描述进行错误处理。**
+**你需要实现的内容包含：文档中的完整描述（就一句话）。请特别关注返回值描述，并对不合理的输入做合适的处理，具体而言，你需要针对文档中`ENONENT`,`ENOTDIR`,`ENOTEMPTY`,`EACCESS`（只用考虑一个特殊情况）的描述进行错误处理。**
 
 ##### rmkdir
 
 该函数对应于[前文](#RefToSysFunc)提到的`mkdir`函数，在Linux系统下你可以利用命令`man 2 mkdir`查看其文档。
 
-**你需要实现的内容包含：仅文档中的第一句描述，因为该内存文件系统并未引入权限问题。请特别关注返回值描述（不用设置errno），并对不合理的输入做合适的处理，具体而言，你需要针对文档中`EEXIST`,`EINVAL`,`ENOENT`,`ENOTDIR`(前一个，后一个是因为该文件系统未引入相对路径)。**
+**你需要实现的内容包含：仅文档中的第一句描述，因为该内存文件系统并未引入权限问题。请特别关注返回值描述，并对不合理的输入做合适的处理，具体而言，你需要针对文档中`EEXIST`,`EINVAL`,`ENOENT`,`ENOTDIR`(前一个，后一个是因为该文件系统未引入相对路径)。**
 
 ##### ropen
 
 该函数对应于[前文](#RefToSysFunc)提到的`open`函数，在Linux系统下你可以利用命令`man 2 open`查看其文档。
 
-**你需要实现的内容包含：文档中的前两段描述和返回值描述（不用设置errno，但正因如此，为了区分不同的错误，你应该对返回值做出一些与文档描述不同的处理，下文即将提到这一点），关于标志位部分的内容，前文已经为你总结了。你需要对不合理的输入做合适的处理，具体而言，你需要针对文档中`EEXIST`和`ENONENT`（前两个）的描述进行错误处理，请注意，为了简洁起见，你不需要对`EISDIR`进行处理，测试数据保证不会出现此类情况。**
+**你需要实现的内容包含：文档中的前两段描述和返回值描述，关于标志位部分的内容，前文已经为你总结了。你需要对不合理的输入做合适的处理，具体而言，你需要针对文档中`EEXIST`和`ENONENT`（前两个）的描述进行错误处理，请注意，为了简洁起见，你不需要对`EISDIR`进行处理，测试数据保证不会出现此类情况。**
 
 > **更正**：由于O_EXCL不在此次项目考虑范围之内，所以你实际上不需要对EEXIST进行处理；此外，你需要对EINVAL（文件名不合法的条项，即检测是否出现了数字、字母、.之外的字符）进行处理
 
@@ -252,13 +252,13 @@ read(fd2, buf, 6); //从fd2中读取6个字节存储到buf中
 
 该函数对应于[前文](#RefToSysFunc)提到的`read`函数，在Linux系统下你可以利用命令`man 2 read`查看其文档。
 
-**你需要实现的内容包含：文档中的前两段描述，即不需要考虑读取0个字节的情况。请特别关注返回值描述（不用设置errno），并对不合理的输入做合适的处理，具体而言，你需要针对文档中`EBADF`和`EISDIR`进行处理，请注意你的程序应该具备足够的鲁棒性。**
+**你需要实现的内容包含：文档中的前两段描述，即不需要考虑读取0个字节的情况。请特别关注返回值描述，并对不合理的输入做合适的处理，具体而言，你需要针对文档中`EBADF`和`EISDIR`进行处理，请注意你的程序应该具备足够的鲁棒性。**
 
 ##### rwrite
 
 该函数对应于[前文](#RefToSysFunc)提到的`write`函数，在Linux系统下你可以利用命令`man 2 write`查看其文档。
 
-**你需要实现的内容包含：文档中的前三段描述和返回值描述中的前两段（不用设置errno）。同时，你还需要对不合理的输入做合适的处理，具体而言，你需要针对文档中`EBADF`和`EISDIR`（文档中并没有具体的描述，按照read类似地处理即可）进行处理。**
+**你需要实现的内容包含：文档中的前三段描述和返回值描述中的前两段。同时，你还需要对不合理的输入做合适的处理，具体而言，你需要针对文档中`EBADF`和`EISDIR`（文档中并没有具体的描述，按照read类似地处理即可）进行处理。**
 
 ##### rclose
 
@@ -326,13 +326,19 @@ export PATH=/path//to/:$PATH
 
 对应于`cat`命令，你可以使用命令`man cat`查看其文档，**我们保证传入参数仅含一个绝对地址**，你需要打印命令执行的结果，如果输入不合法，你的结果应该为`No such file or directory`或`Is a directory`。
 
+> **更正**：你还需要对`Not a directory`进行处理
+
 ##### smkdir
 
 对应于`mkdir`命令，你可以使用命令`man mkdir`查看其文档，**我们保证传入参数仅含一个绝对地址**，你需要打印命令执行的结果，如果输入不合法，你的结果应该为`No such file or directory`或`File exists`。
 
+> **更正**：你还需要对`Not a directory`进行处理
+
 ##### stouch
 
 对应于`touch`命令，你可以使用命令`man touch`查看其文档，**我们保证传入参数仅含一个绝对地址**，你需要打印命令执行的结果，如果输入不合法，你的结果应该为`No such file or directory`。
+
+> **更正**：你还需要对`Not a directory`进行处理
 
 ##### secho
 
@@ -527,7 +533,7 @@ int main() {
 ls /home
 ls: cannot access '/home': No such file or directory
 cat /home/ubuntu/.bashrc
-cat: cannot access '/home/ubuntu/.bashrc': No such file or directory
+cat: /home/ubuntu/.bashrc: No such file or directory
 cat /
 cat: /: Is a directory
 mkdir /home
@@ -535,7 +541,7 @@ mkdir /test/1
 mkdir: cannot create directory '/test/1': No such file or directory
 touch /home/1
 mkdir /home/1/1
-mkdir: cannot create directory '/home/1/1': File exists
+mkdir: cannot create directory '/home/1/1': Not a directory
 touch /test/1
 touch: cannot touch '/test/1': No such file or directory
 which notexist
