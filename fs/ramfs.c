@@ -159,12 +159,25 @@ stat rmkdir(const char* pathname) { // Create a directory.
 }
 
 // ERRORS
-// ENONENT:   A directory component in `pathname` does not exist.
+// ENOENT:   A directory component in `pathname` does not exist.
 // ENOTDIR:   `pathname`, or a component used as a directory in `pathname`, is not a directory.
 // ENOTEMPTY: `pathname` is not empty.
-// EACCESS:   Write access to the directory containing `pathname` was not allowed, or one of the directories in the path prefix of `pathname` did not allow search permission.
+// EACCESS:   Write access to the directory containing `pathname` was not allowed, or one of the directories in the path prefix of `pathname` did not allow search permission. (?)
 stat rrmdir(const char* pathname) { // Delete a directory.
-
+    Node *parent = find_parent(pathname);
+    Node *dir = find(pathname);
+    if (parent == NULL || dir == NULL || dir->type != D || dir->nchilds != 0) { // ENOENT, ENOTDIR, ENOTEMPTY
+        return FAILURE;
+    }
+    int index = existed_index(parent, dir->name);
+    free(dir->name);
+    free(dir);
+    parent->nchilds--;
+    for (int i = index; i < parent->nchilds; i++) {
+        parent->childs[i] = parent->childs[i + 1];
+    }
+    parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node *));
+    return SUCCESS;
 }
 
 // ERRORS

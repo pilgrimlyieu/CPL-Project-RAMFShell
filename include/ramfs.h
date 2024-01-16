@@ -18,8 +18,16 @@
 #define SEEK_CUR 1
 #define SEEK_END 2
 
-#define SUCCESS 0
-#define FAILURE -1
+#define SUCCESS   0 
+#define FAILURE  -1
+#define EEXIST    1 
+#define ENOENT    2 
+#define EISDIR    3
+#define ENOTDIR   4 
+#define EINVAL    5 
+#define EBADF     6 
+#define ENOTEMPTY 7
+
 
 typedef intptr_t ssize_t;
 typedef uintptr_t size_t;
