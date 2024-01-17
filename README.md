@@ -250,7 +250,7 @@ read(fd2, buf, 6); //从fd2中读取6个字节存储到buf中
 - O_CREAT | O_RDONLY：创建与只读
 - O_CREAT | O_WRONLY：创建与只写
 - O_CREAT | O_RDWR | O_WRONLY：创建与只写（见前文说明）
-- O_APPEND | O_RDWR：追加可读写
+- O_APPEND | O_RDWR：追加可读写（**追加时只需要在open时设置offset即可，之后的write不需要再设置offset，可以参考样例4**）
 - O_APPEND | O_WRONLY：追加与只写
 - O_TRUNC | O_WRONLY | O_RDWR：覆盖与只写（见前文说明）
 
@@ -643,3 +643,57 @@ touch /test/1
 touch: cannot touch '/test/1': No such file or directory
 which notexist
 ~~~~
+
+#### 样例4
+
+这是为O_APPEND和O_TRUNC标志位准备的简单样例
+
+main.c: 
+
+~~~~c
+#include "ramfs.h"
+#include "shell.h"
+#include <string.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <stdio.h>
+
+char s[105] = "Hello World!\n";
+int main() {
+    init_ramfs();
+    init_shell();
+    int fd1 = ropen("/test", O_CREAT | O_RDWR | O_APPEND);
+    rwrite(fd1, s, strlen(s));
+    rseek(fd1, 2, SEEK_SET);
+    rwrite(fd1, s, strlen(s));
+
+    scat("/test");
+
+    int fd2 = ropen("/test", O_TRUNC | O_RDWR);
+    
+    scat("/test");
+    rwrite(fd2, s, strlen(s));
+    
+    scat("/test");
+
+    close_shell();
+    close_ramfs();
+    return 0;
+}
+~~~~
+
+期望输出: 
+
+~~~~
+cat /test
+HeHello World!
+
+cat /test
+
+cat /test
+Hello World!
+
+~~~~
+
+
+
