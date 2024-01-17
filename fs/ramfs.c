@@ -47,6 +47,20 @@ Node* find_parent(const char* pathname) {
     return parent;
 }
 
+void remove_node(Node* parent, Node* node) {
+    int index = existed_index(parent, node->name);
+    if (node->type == F) {
+        free(node->content);
+    }
+    free(node->name);
+    free(node);
+    parent->nchilds--;
+    for (int i = index; i < parent->nchilds; i++) {
+        parent->childs[i] = parent->childs[i + 1];
+    }
+    parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node *));
+}
+
 char* get_basename(const char* pathname) {
     char *start = (char*)pathname + strlen(pathname) - 1;
     int len = 0;
@@ -80,7 +94,7 @@ bool is_valid_path(const char* pathname) {
 }
 
 int existed_index(const Node *dir, const char* name) {
-    if (dir->type == D) {
+    if (dir != NULL && dir->type == D) {
         for (int i = 0; i < dir->nchilds; i++) {
             if (strcmp(dir->childs[i]->name, name) == 0) {
                 return i;
@@ -90,9 +104,9 @@ int existed_index(const Node *dir, const char* name) {
     return FAILURE;
 }
 
-stat create_dir(Node* parent, const char* name) {
+Node* create_dir(Node* parent, const char* name) {
     if (existed_index(parent, name) != FAILURE) {
-        return FAILURE;
+        return NULL;
     }
     Node *dir = malloc(sizeof(Node));
     dir->type = D;
@@ -100,10 +114,12 @@ stat create_dir(Node* parent, const char* name) {
     strcpy(dir->name, name);
     dir->nchilds = 0;
     dir->childs = NULL;
-    parent->nchilds++;
-    parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node *));
-    parent->childs[parent->nchilds - 1] = dir;
-    return SUCCESS;
+    if (parent != NULL) {
+        parent->nchilds++;
+        parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node *));
+        parent->childs[parent->nchilds - 1] = dir;
+    }
+    return dir;
 }
 
 
@@ -152,7 +168,7 @@ off_t rseek(fd_t fd, off_t offset, whence_t whence) { // Reposition read/write f
 stat rmkdir(const char* pathname) { // Create a directory.
     Node *parent = find_parent(pathname);
     char *name = get_basename(pathname);
-    if (parent == NULL || !is_valid_name(name) || create_dir(parent, name) != SUCCESS) { // ENOENT, ENOTDIR; EINVAL; EEXIST
+    if (parent == NULL || !is_valid_name(name) || create_dir(parent, name) == NULL) { // ENOENT, ENOTDIR; EINVAL; EEXIST
         return FAILURE;
     }
     return SUCCESS;
@@ -169,14 +185,7 @@ stat rrmdir(const char* pathname) { // Delete a directory.
     if (parent == NULL || dir == NULL || dir->type != D || dir->nchilds != 0) { // ENOENT, ENOTDIR, ENOTEMPTY
         return FAILURE;
     }
-    int index = existed_index(parent, dir->name);
-    free(dir->name);
-    free(dir);
-    parent->nchilds--;
-    for (int i = index; i < parent->nchilds; i++) {
-        parent->childs[i] = parent->childs[i + 1];
-    }
-    parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node *));
+    remove_node(parent, dir);
     return SUCCESS;
 }
 
@@ -184,16 +193,17 @@ stat rrmdir(const char* pathname) { // Delete a directory.
 // EISDIR: `pathname` refers to a directory.
 // ENOENT: A component in `pathname` does not exist or `pathname` is empty.
 stat runlink(const char* pathname) { // Delete a file.
-
+    Node *parent = find_parent(pathname);
+    Node *file = find(pathname);
+    if (parent == NULL || file == NULL || file->type == D) { // ENOENT, EISDIR
+        return FAILURE;
+    }
+    remove_node(parent, file);
+    return SUCCESS;
 }
 
 void init_ramfs() {
-    root = malloc(sizeof(Node));
-    root->type = D;
-    root->name = malloc(2);
-    strcpy(root->name, "/");
-    root->nchilds = 0;
-    root->childs = NULL;
+    root = create_dir(NULL, "/");
 }
 
 void close_ramfs() {
