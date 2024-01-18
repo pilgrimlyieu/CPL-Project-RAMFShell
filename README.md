@@ -58,6 +58,8 @@ Linux的文件系统结构采用了树形结构，具体描述如下：
 
 需要注意的是，在Linux系统下，如果绝对路径指示目录，则它的每一个/都可以被替换为多余的数个/，两者表意相同，且末尾也可以添加数个/，例如///dir////；如果绝对路径指示文件，则除了末尾不可以添加/，否则视为目录，路径中间的所有/都可以冗余，例如///dir///1.txt。你不妨自行在Linux环境下尝试这一点，但是需要指出的是，Linux系统会对/和//进行区分，但实际上却是同一目录**，在本次项目中，我们不考虑//的存在，一律视为/，同时，本次项目中的目录与文件名如果含有字母，数字和`.`之外的字符均视为非法取值**。
 
+> **更新**：文件系统对每个文件的文件名长度是有约束的，我们约定所有的basename需要满足≤32字节，否则视为不合法情况（什么是basename？）
+
 $\color{red}⚠在本次项目中，关于文件系统的部分沿用上述说明。并且不用考虑相对路径 (.和..)，所有输入均为绝对路径。$
 
 #### Shell
@@ -239,6 +241,8 @@ read(fd2, buf, 6); //从fd2中读取6个字节存储到buf中
 该函数对应于[前文](#RefToSysFunc)提到的`open`函数，在Linux系统下你可以利用命令`man 2 open`查看其文档。
 
 **你需要实现的内容包含：文档中的前两段描述和返回值描述，关于标志位部分的内容，前文已经为你总结了。你需要对不合理的输入做合适的处理，具体而言，你需要针对文档中`EINVAL`和`ENONENT`（前两个）的描述进行错误处理，请注意，为了简洁起见，你不需要对`EISDIR`进行处理，测试数据保证不会出现此类情况。**
+
+> **更新**：请注意，此处我们只保证了`EISDIR`的情况不会出现，即不会在打开一个目录时携带不合法的标志位，而没有保证数据中不会打开一个目录。特别的，对于打开目录得到的描述符，对它的读写操作都应该出错。
 
 为了简化大家实现此过程，我们约定数据中可能存在的flag组合包括：
 
@@ -695,5 +699,53 @@ Hello World!
 
 ~~~~
 
+#### 样例5
 
+由于之前写漏了basename长度的要求，以及有许多同学可能忘记了对目录的open操作，因此补充一个basename长度和open目录的样例
+
+main.c:
+
+~~~~c
+#include "ramfs.h"
+#include "shell.h"
+#include <string.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <stdio.h>
+
+#define test(func, expect, ...) assert(func(__VA_ARGS__) == expect)
+#define succopen(var, ...) assert((var = ropen(__VA_ARGS__)) >= 0)
+#define failopen(var, ...) assert((var = ropen(__VA_ARGS__)) == -1)
+
+int main() {
+    init_ramfs();
+    int fd;
+    test(rmkdir, -1, "/000000000000000000000000000000001");
+
+    test(rmkdir, 0, "/it");
+    test(rmkdir, 0, "/it/has");
+    test(rmkdir, 0, "/it/has/been");
+    test(rmkdir, 0, "/it/has/been/a");
+    test(rmkdir, 0, "/it/has/been/a/long");
+
+    succopen(fd, "/it/has/been/a/long", O_CREAT);
+    failopen(fd, "it/has/been/a/long", O_CREAT);
+    char buf[105];
+    test(rread, -1, fd, buf, 100);
+    test(rwrite, -1, fd, "a", 1);
+    test(rrmdir, -1, "/it/has/been");
+    test(rrmdir, 0, "/it/has/been/a/long");
+    test(rwrite, -1, fd, "a", 1);
+    test(rread, -1, fd, buf, 100);
+
+    init_shell();
+    close_shell();
+    close_ramfs();
+    return 0;
+}
+~~~~
+
+期望输出:
+
+除了commit信息之外没有任何输出
 
