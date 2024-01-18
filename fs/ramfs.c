@@ -219,7 +219,14 @@ ssize_t rwrite(fd_t fd, const void *buf, size_t count) { // Write to a file desc
 // EBADF:  `fd` is not a valid file descriptor or is not open for reading.
 // EISDIR: `fd` refers to a directory.
 ssize_t rread(fd_t fd, void *buf, size_t count) { // Read from a file descriptor.
-
+    if (!fd_readable(fd) || Handles[fd]->f->type == D) {
+        return FAILURE;
+    }
+    size_t begin = Handles[fd]->offset;
+    for (; Handles[fd]->offset < count && Handles[fd]->offset < Handles[fd]->f->size; Handles[fd]->offset++) {
+        ((char *) buf)[Handles[fd]->offset] = ((char *) Handles[fd]->f->content)[Handles[fd]->offset];
+    }
+    return Handles[fd]->offset - begin;
 }
 
 // `whence`
