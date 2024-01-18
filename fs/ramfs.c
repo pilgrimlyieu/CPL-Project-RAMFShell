@@ -82,6 +82,9 @@ char* get_basename(const char* pathname) {
 
 bool is_valid_name(const char* name) {
     size_t len = strlen(name);
+    if (len > 32) { // Length Limit
+        return false;
+    }
     for (int i = 0; i < len; i++) {
         if (!isalnum(name[i]) && name[i] != '.') {
             return false;
@@ -91,6 +94,9 @@ bool is_valid_name(const char* name) {
 }
 
 bool is_valid_path(const char* pathname) {
+    if (pathname[0] != '/') { // All `pathname` should be absolute path.
+        return false;
+    }
     const char *valid_char = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./";
     size_t valid = strcspn(pathname, valid_char);
     return valid == strlen(pathname);
