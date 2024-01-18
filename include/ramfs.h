@@ -68,3 +68,5 @@ void close_ramfs();
 Node* find(const char* pathname);
 
 int existed_index(const Node *dir, const char *name);
+bool is_valid_name(const char *name);
+bool is_valid_path(const char *pathname);

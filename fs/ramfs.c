@@ -157,6 +157,24 @@ Node* create_file(Node* parent, const char* name) {
     return file;
 }
 
+void pre_fd(fd_t fd) {
+    if (Handles[fd]->flags & O_APPEND) {
+        Handles[fd]->offset = Handles[fd]->f->size;
+    }
+    if ((Handles[fd]->flags & O_TRUNC) && fd_writable(fd)) {
+        Handles[fd]->f->size = 0;
+        free(Handles[fd]->f->content);
+        Handles[fd]->f->content = NULL;
+    }
+    if ((Handles[fd]->flags & O_RDWR) && (Handles[fd]->flags & O_WRONLY)) {
+        Handles[fd]->flags ^= O_RDWR;
+    }
+}
+
+bool fd_usable(fd_t fd) {
+    return Handles[fd]->f->type == F && Handles[fd]->used;
+}
+
 // ERRORS
 // EINVAL:  The final component(basename) of `pathname` is invalid.
 // ENONENT: O_CREAT is not set and the named file does not exist. A directory in `pathname` does not exist.
@@ -169,10 +187,12 @@ fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a 
             char *name = get_basename(pathname);
             node = create_file(parent, name);
             if (parent == NULL || !is_valid_name(name) || node == NULL) { // ENOENT, ENOTDIR; EINVAL; EEXIST
+                free(node);
                 return FAILURE;
             }
         }
         else {
+            free(node);
             return FAILURE;
         }
     }
@@ -183,23 +203,17 @@ fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a 
     handle->used = true;
     Handles[fd] = handle;
     if (node->type == F) {
-        if (flags & O_APPEND) {
-            handle->offset = node->size;
-        }
-        if (flags & O_TRUNC) {
-            if (fd_writable(fd)) {
-                node->size = 0;
-                free(node->content);
-                node->content = NULL;
-            }
-        }
-        if (flags & O_RDWR) {
-            if (flags & O_WRONLY) {
-                handle->flags ^= O_RDWR;
-            }
-        }
+        pre_fd(fd);
     }
-    return fd++;
+    free(node);
+    fd_t curr = fd;
+    if (fd < NRFD - 1) {
+        fd++;
+    }
+    else {
+        for (fd = 0; fd < NRFD && Handles[fd]->used; fd++); // Find an unused `fd`.
+    }
+    return curr;
 }
 
 // ERRORS
@@ -261,8 +275,10 @@ stat rmkdir(const char* pathname) { // Create a directory.
     Node *parent = find_parent(pathname);
     char *name = get_basename(pathname);
     if (parent == NULL || !is_valid_name(name) || create_dir(parent, name) == NULL) { // ENOENT, ENOTDIR; EINVAL; EEXIST
+        free(name);
         return FAILURE;
     }
+    free(name);
     return SUCCESS;
 }
 
