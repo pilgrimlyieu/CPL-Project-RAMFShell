@@ -229,7 +229,20 @@ ssize_t rread(fd_t fd, void *buf, size_t count) { // Read from a file descriptor
 // ERRORS
 // EINVAL: `whence` is not valid.
 off_t rseek(fd_t fd, off_t offset, whence_t whence) { // Reposition read/write file offset.
-
+    switch (whence) {
+        case (SEEK_SET):
+            Handles[fd]->offset = offset;
+            break;
+        case (SEEK_CUR):
+            Handles[fd]->offset += offset;
+            break;
+        case (SEEK_END):
+            Handles[fd]->offset = Handles[fd]->f->size + offset;
+            break;
+        default:
+            return FAILURE;
+    }
+    return Handles[fd]->offset;
 }
 
 // ERRORS
