@@ -8,9 +8,12 @@
 Node *root = NULL;
 
 #define NRFD 4096
-Handle Handles[NRFD];
+Handle* Handles[NRFD];
 
 Node* find(const char* pathname) {
+    if (!is_valid_path(pathname)) {
+        return NULL;
+    }
     Node *current = root;
     char *path = malloc(strlen(pathname) + 1);
     strcpy(path, pathname);
@@ -104,6 +107,14 @@ int existed_index(const Node *dir, const char* name) {
     return FAILURE;
 }
 
+bool fd_readable(fd_t fd) {
+    return !(Handles[fd]->flags & O_WRONLY) || Handles[fd]->flags & O_RDWR;
+}
+
+bool fd_writable(fd_t fd) {
+    return Handles[fd]->flags & O_WRONLY || Handles[fd]->flags & O_RDWR;
+}
+
 Node* create_dir(Node* parent, const char* name) {
     if (existed_index(parent, name) != FAILURE) {
         return NULL;
@@ -122,12 +133,67 @@ Node* create_dir(Node* parent, const char* name) {
     return dir;
 }
 
+Node* create_file(Node* parent, const char* name) {
+    if (existed_index(parent, name) != FAILURE) {
+        return NULL;
+    }
+    Node *file = malloc(sizeof(Node));
+    file->type = F;
+    file->name = malloc(strlen(name) + 1);
+    strcpy(file->name, name);
+    file->size = 0;
+    file->content = NULL;
+    if (parent != NULL) {
+        parent->nchilds++;
+        parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node *));
+        parent->childs[parent->nchilds - 1] = file;
+    }
+    return file;
+}
 
 // ERRORS
 // EINVAL:  The final component(basename) of `pathname` is invalid.
-// ENONENT: O_CREAT is not set and the named file does not exist.
-stat ropen(const char* pathname, flags_t flags) { // Open and possibly create a file.
-
+// ENONENT: O_CREAT is not set and the named file does not exist. A directory in `pathname` does not exist.
+fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a file.
+    static fd_t fd = 0;
+    Node *node = find(pathname);
+    if (node == NULL) {
+        if (flags & O_CREAT) {
+            Node *parent = find_parent(pathname);
+            char *name = get_basename(pathname);
+            node = create_file(parent, name);
+            if (parent == NULL || !is_valid_name(name) || node == NULL) { // ENOENT, ENOTDIR; EINVAL; EEXIST
+                return FAILURE;
+            }
+        }
+        else {
+            return FAILURE;
+        }
+    }
+    Handle *handle = malloc(sizeof(handle));
+    handle->offset = 0;
+    handle->f = node;
+    handle->flags = flags;
+    handle->used = true;
+    Handles[fd] = handle;
+    if (node->type == F) {
+        if (flags & O_APPEND) {
+            handle->offset = node->size;
+        }
+        if (flags & O_TRUNC) {
+            if (fd_writable(fd)) {
+                node->size = 0;
+                free(node->content);
+                node->content = NULL;
+            }
+        }
+        if (flags & O_RDWR) {
+            if (flags & O_WRONLY) {
+                handle->flags ^= O_RDWR;
+            }
+        }
+    }
+    return fd++;
 }
 
 // ERRORS
@@ -175,7 +241,7 @@ stat rmkdir(const char* pathname) { // Create a directory.
 }
 
 // ERRORS
-// ENOENT:   A directory component in `pathname` does not exist.
+// ENOENT:    A directory component in `pathname` does not exist.
 // ENOTDIR:   `pathname`, or a component used as a directory in `pathname`, is not a directory.
 // ENOTEMPTY: `pathname` is not empty.
 // EACCESS:   Write access to the directory containing `pathname` was not allowed, or one of the directories in the path prefix of `pathname` did not allow search permission. (?)

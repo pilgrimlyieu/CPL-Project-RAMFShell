@@ -55,7 +55,7 @@ typedef struct Handle {
     bool used;
 } Handle;
 
-stat ropen(const char* pathname, flags_t flags);
+fd_t ropen(const char* pathname, flags_t flags);
 stat rclose(fd_t fd);
 ssize_t rwrite(fd_t fd, const void *buf, size_t count);
 ssize_t rread(fd_t fd, void *buf, size_t count);
