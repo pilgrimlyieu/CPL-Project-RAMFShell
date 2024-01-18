@@ -226,18 +226,30 @@ stat rclose(fd_t fd) { // Close a file descriptor.
 // EBADF:  `fd` is not a valid file descriptor or is not open for writing.
 // EISDIR: `fd` refers to a directory.
 ssize_t rwrite(fd_t fd, const void *buf, size_t count) { // Write to a file descriptor.
-
+    if (!(fd_usable(fd) && fd_writable(fd))) {
+        return FAILURE;
+    }
+    size_t len = strlen(buf);
+    size_t written = (len < count) ? len : count;
+    if (Handles[fd]->f->size < Handles[fd]->offset + written) {
+        Handles[fd]->f->size = Handles[fd]->offset + written;
+        Handles[fd]->f->content = realloc(Handles[fd]->f->content, Handles[fd]->f->size);
+    }
+    for (int i = 0; i < written; i++) {
+        ((char *) Handles[fd]->f->content)[Handles[fd]->offset++] = ((char *) buf)[i];
+    }
+    return written;
 }
 
 // ERRORS
 // EBADF:  `fd` is not a valid file descriptor or is not open for reading.
 // EISDIR: `fd` refers to a directory.
 ssize_t rread(fd_t fd, void *buf, size_t count) { // Read from a file descriptor.
-    if (!fd_readable(fd) || Handles[fd]->f->type == D) {
+    if (!(fd_usable(fd) && fd_readable(fd))) {
         return FAILURE;
     }
     size_t begin = Handles[fd]->offset;
-    for (; Handles[fd]->offset < count && Handles[fd]->offset < Handles[fd]->f->size; Handles[fd]->offset++) {
+    for (; Handles[fd]->offset < begin + count && Handles[fd]->offset < Handles[fd]->f->size; Handles[fd]->offset++) {
         ((char *) buf)[Handles[fd]->offset] = ((char *) Handles[fd]->f->content)[Handles[fd]->offset];
     }
     return Handles[fd]->offset - begin;
