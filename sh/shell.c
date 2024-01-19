@@ -1,16 +1,48 @@
 #include "ramfs.h"
 #include "shell.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
 #ifndef ONLINE_JUDGE
     #define print(...) printf("\033[31m");printf(__VA_ARGS__);printf("\033[0m");
 #else
     #define print(...) 
 #endif
 
+char *PATH;
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
+void read_path(void) {
+    Node* rc = find("/home/ubuntu/.bashrc");
+    char *run_commands = malloc(rc->size);
+    strcpy(run_commands, rc->content);
+    char *line = strtok(run_commands, "\n");
+    while (line != NULL) {
+        if (strncmp(line, "export PATH=", 12) == 0) { // 12 = strlen("export PATH=")
+            char *path = strstr(line, "$PATH");
+            if (path == NULL) {
+                PATH = realloc(PATH, (strlen(line + 12) + 1));
+                strcpy(PATH, line + 12);
+            }
+            else if (path == line + 12) { // "export PATH=$PATH:..."
+                PATH = realloc(PATH, (strlen(line + 17) + strlen(PATH) + 1)); // 17 = strlen("export PATH=$PATH:")
+                strcat(PATH, line + 17);
+            }
+            else { // "export PATH=...:$PATH". I guess `$PATH` will not appear in the middle of the line, LOL.
+                *path = '\0';
+                PATH = realloc(PATH, (strlen(line + 12) + strlen(PATH) + 1)); // `PATH` is promised initialized, so don't worry about `strlen(NULL)`.
+                char *temp = malloc(strlen(PATH) + 1);
+                strcpy(temp, PATH);
+                strcpy(PATH, line + 12);
+                strcat(PATH, temp);
+                free(temp);
+            }
+        }
+        line = strtok(NULL, "\n");
+    }
+    free(run_commands);
+}
 
 // STATUS
 // 0: If OK.
@@ -48,7 +80,8 @@ stat swhich(const char* cmd) { // Locate a command.
 }
 
 void init_shell() {
-
+    PATH = NULL;
+    read_path();
 }
 
 void close_shell() {

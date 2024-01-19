@@ -28,7 +28,6 @@
 #define EBADF     6 
 #define ENOTEMPTY 7
 
-
 typedef intptr_t  ssize_t;
 typedef uintptr_t size_t;
 typedef long      off_t;

@@ -10,6 +10,8 @@ Node *root = NULL;
 #define NRFD 4096
 Handle* Handles[NRFD];
 
+// Auxiliary functions
+
 Node* find(const char* pathname) {
     if (!is_valid_path(pathname)) {
         return NULL;
@@ -174,6 +176,8 @@ void pre_fd(fd_t fd) {
 bool fd_usable(fd_t fd) {
     return Handles[fd]->f->type == F && Handles[fd]->used;
 }
+
+// API functions
 
 // ERRORS
 // EINVAL:  The final component(basename) of `pathname` is invalid.
