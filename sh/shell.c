@@ -63,6 +63,24 @@ bool can_be_env(const char *str, int position) {
     return cnt % 2 == 0;
 }
 
+char *basic_directory(const char *pathname) { // Remove extre '/' in pathname
+    char *basic = malloc(strlen(pathname) + 1);
+    int j = 0;
+    for (int i = 0; pathname[i] != '\0'; ) {
+        if (pathname[i] == '/') {
+            basic[j++] = pathname[i++];
+            while (pathname[i] == '/') {
+                i++;
+            }
+        }
+        else {
+            basic[j++] = pathname[i++];
+        }
+    }
+    basic[j] = '\0';
+    return basic;
+}
+
 // STATUS
 // 0: If OK.
 // 1: If minor problems (e.g., cannot access subdirectory).
@@ -172,7 +190,14 @@ stat secho(const char* content) { // Equivalent to `echo <content>`. No need to 
 // 1: If the specified command is nonexistent.
 stat swhich(const char* cmd) { // Locate a command.
     print("which %s\n", cmd);
-
+    char *path = strtok(PATH, ":");
+    while (path != NULL) {
+        if (existed_index(find(path), cmd) != FAILURE) {
+            printf("%s/%s\n", basic_directory(path), cmd);
+            return SUCCESS;
+        }
+    }
+    return PROBLEM;
 }
 
 void init_shell() {
