@@ -5,10 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-Node *root = NULL;
-
 #define NRFD 4096
+Node *root = NULL;
 Handle* Handles[NRFD];
+stat FIND_LEVEL = SUCCESS;
 
 // Auxiliary functions
 
@@ -21,15 +21,22 @@ Node* find(const char* pathname) {
     strcpy(path, pathname);
     char *element = strtok(path, "/");
     while (element != NULL) {
+        if (current->type == F) {
+            free(path);
+            FIND_LEVEL = ENOTDIR;
+            return NULL;
+        }
         int index = existed_index(current, element);
         if (index == FAILURE) {
             free(path);
+            FIND_LEVEL = ENOENT;
             return NULL;
         }
         current = current->childs[index];
         element = strtok(NULL, "/");
     }
     free(path);
+    FIND_LEVEL = SUCCESS;
     return current;
 }
 
@@ -105,7 +112,7 @@ bool is_valid_path(const char* pathname) {
 }
 
 int existed_index(const Node* dir, const char* name) {
-    if (dir != NULL && dir->type == D) {
+    if (dir != NULL) {
         for (int i = 0; i < dir->nchilds; i++) {
             if (strcmp(dir->childs[i]->name, name) == 0) {
                 return i;

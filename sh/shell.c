@@ -26,7 +26,7 @@ void read_path(void) {
                 strcpy(PATH, line + 12);
             }
             else if (path == line + 12) { // "export PATH=$PATH:..."
-                PATH = realloc(PATH, (strlen(line + 17) + strlen(PATH) + 1)); // 17 = strlen("export PATH=$PATH:")
+                PATH = realloc(PATH, (strlen(line + 17) + strlen(PATH) + 1)); // 17 = strlen("export PATH=$PATH")
                 strcat(PATH, line + 17);
             }
             else { // "export PATH=...:$PATH". I guess `$PATH` will not appear in the middle of the line, LOL.
@@ -49,6 +49,30 @@ void read_path(void) {
 // 1: If minor problems (e.g., cannot access subdirectory).
 stat sls(const char* pathname) { // List directory contents.
     print("ls %s\n", pathname);
+    Node *node = find(pathname);
+    if (node == NULL) {
+        switch (FIND_LEVEL) {
+            case (ENOTDIR):
+                printf("ls: cannot access '%s': Not a directory\n", pathname);
+                break;
+            case (ENOENT):
+                printf("ls: cannot access '%s': No such file or directory\n", pathname);
+                break;
+        }
+        return PROBLEM;
+    }
+    else {
+        if (node->type == D) {
+            for (int i = 0; i < node->size; i++) {
+                printf("%s ", node->childs[i]->name);
+            }
+            putchar('\n');
+        }
+        else {
+            printf("%s\n", node->name);
+        }
+        return SUCCESS;
+    }
 }
 
 stat scat(const char* pathname) { // Concatenate files and print on the standard output.
@@ -66,7 +90,7 @@ stat stouch(const char* pathname) { // Change file timestamps. If file doesn't e
 
 }
 
-stat secho(const char* content) { // Equivalent to `echo "<content>"`. No need to support escape sequences. Have to support environment variables.
+stat secho(const char* content) { // Equivalent to `echo <content>`. No need to support escape sequences. Have to support environment variables.
     print("echo %s\n", content);
 
 }
@@ -85,5 +109,5 @@ void init_shell() {
 }
 
 void close_shell() {
-
+    free(PATH);
 }

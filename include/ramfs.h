@@ -18,15 +18,16 @@
 #define SEEK_CUR 1
 #define SEEK_END 2
 
-#define SUCCESS   0 
-#define FAILURE  -1
-#define EEXIST    1 
-#define ENOENT    2 
-#define EISDIR    3
-#define ENOTDIR   4 
-#define EINVAL    5 
-#define EBADF     6 
-#define ENOTEMPTY 7
+#define SUCCESS    0
+#define PROBLEM    1
+#define FAILURE   -1
+#define EEXIST    -2
+#define ENOENT    -3
+#define EISDIR    -4
+#define ENOTDIR   -5
+#define EINVAL    -6
+#define EBADF     -7
+#define ENOTEMPTY -8
 
 typedef intptr_t  ssize_t;
 typedef uintptr_t size_t;
@@ -80,3 +81,5 @@ stat    rrmdir      (const char* pathname);
 stat    runlink     (const char* pathname);
 void    init_ramfs  ();
 void    close_ramfs ();
+
+extern stat FIND_LEVEL;
