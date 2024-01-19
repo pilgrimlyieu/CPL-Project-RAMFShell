@@ -111,9 +111,11 @@ stat smkdir(const char* pathname) { // Make directories.
         char *basename = get_basename(pathname);
         if (create_dir(parent, basename) == NULL) {
             printf("mkdir: cannot create directory '%s': File exists\n", pathname);
+            free(basename);
             return PROBLEM;
         }
         else {
+            free(basename);
             return SUCCESS;
         }
     }
@@ -121,7 +123,17 @@ stat smkdir(const char* pathname) { // Make directories.
 
 stat stouch(const char* pathname) { // Change file timestamps. If file doesn't exist, create it.
     print("touch %s\n", pathname);
-
+    Node *parent = find_parent(pathname);
+    if (parent == NULL) {
+        access_error("touch", "cannot touch", pathname);
+        return PROBLEM;
+    }
+    else {
+        char *basename = get_basename(pathname);
+        create_file(parent, basename);
+        free(basename);
+        return SUCCESS;
+    }
 }
 
 stat secho(const char* content) { // Equivalent to `echo <content>`. No need to support escape sequences. Have to support environment variables.
