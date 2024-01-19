@@ -15,6 +15,9 @@ char *PATH;
 
 void read_path(void) {
     Node* rc = find("/home/ubuntu/.bashrc");
+    if (rc == NULL) {
+        return;
+    }
     char *run_commands = malloc(rc->size);
     strcpy(run_commands, rc->content); // TODO: fsanitize address ERROR
     char *line = strtok(run_commands, "\n");
@@ -101,7 +104,14 @@ stat scat(const char* pathname) { // Concatenate files and print on the standard
     print("cat %s\n", pathname);
     Node *node = find(pathname);
     if (node == NULL) {
-        access_error("cat", "cannot access", pathname);
+    switch (FIND_LEVEL) {
+        case (ENOTDIR):
+            printf("cat: %s: Not a directory\n", pathname);
+            break;
+        case (ENOENT):
+            printf("cat: %s: No such file or directory\n", pathname);
+            break;
+    }
         return PROBLEM;
     }
     else {
@@ -124,6 +134,10 @@ stat smkdir(const char* pathname) { // Make directories.
     Node *parent = find_parent(pathname);
     if (parent == NULL) {
         access_error("mkdir", "cannot create directory", pathname);
+        return PROBLEM;
+    }
+    else if (parent->type == F) {
+        printf("mkdir: cannot create directory '%s': Not a directory\n", pathname);
         return PROBLEM;
     }
     else {
@@ -192,6 +206,9 @@ stat secho(const char* content) { // Equivalent to `echo <content>`. No need to 
 // 1: If the specified command is nonexistent.
 stat swhich(const char* cmd) { // Locate a command.
     print("which %s\n", cmd);
+    if (PATH == NULL) {
+        return PROBLEM;
+    }
     char *path = malloc(strlen(PATH) + 1);
     strcpy(path, PATH);
     char *env_path = strtok(path, ":");
