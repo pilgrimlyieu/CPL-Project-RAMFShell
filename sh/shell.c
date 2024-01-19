@@ -44,13 +44,13 @@ void read_path(void) {
     free(run_commands);
 }
 
-void cannot_access(const char* cmd, const char* pathname) {
+void access_error(const char* cmd, const char* custom, const char* pathname) {
     switch (FIND_LEVEL) {
         case (ENOTDIR):
-            printf("%s: cannot access '%s': Not a directory\n", cmd, pathname);
+            printf("%s: %s '%s': Not a directory\n", cmd, custom, pathname);
             break;
         case (ENOENT):
-            printf("%s: cannot access '%s': No such file or directory\n", cmd, pathname);
+            printf("%s: %s '%s': No such file or directory\n", cmd, custom, pathname);
             break;
     }
 }
@@ -62,7 +62,7 @@ stat sls(const char* pathname) { // List directory contents.
     print("ls %s\n", pathname);
     Node *node = find(pathname);
     if (node == NULL) {
-        cannot_access("ls", pathname);
+        access_error("ls", "cannot access", pathname);
         return PROBLEM;
     }
     else {
@@ -83,7 +83,7 @@ stat scat(const char* pathname) { // Concatenate files and print on the standard
     print("cat %s\n", pathname);
     Node *node = find(pathname);
     if (node == NULL) {
-        cannot_access("cat", pathname);
+        access_error("cat", "cannot access", pathname);
         return PROBLEM;
     }
     else {
@@ -102,7 +102,21 @@ stat scat(const char* pathname) { // Concatenate files and print on the standard
 
 stat smkdir(const char* pathname) { // Make directories.
     print("mkdir %s\n", pathname);
-
+    Node *parent = find_parent(pathname);
+    if (parent == NULL) {
+        access_error("mkdir", "cannot create directory", pathname);
+        return PROBLEM;
+    }
+    else {
+        char *basename = get_basename(pathname);
+        if (create_dir(parent, basename) == NULL) {
+            printf("mkdir: cannot create directory '%s': File exists\n", pathname);
+            return PROBLEM;
+        }
+        else {
+            return SUCCESS;
+        }
+    }
 }
 
 stat stouch(const char* pathname) { // Change file timestamps. If file doesn't exist, create it.
