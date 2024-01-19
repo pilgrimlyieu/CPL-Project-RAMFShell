@@ -1,0 +1,38 @@
+{
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C Project Build",
+            "command": "/usr/bin/gcc",
+            "args": [
+                "-g",
+                "${file}",
+                "-o",
+                "${workspaceFolder}/ramfs-shell",
+                "-I",
+                "${workspaceFolder}/include",
+                "fs/ramfs.c",
+                "sh/shell.c",
+                "-lm",
+                "-march=native",
+                "-fno-strict-aliasing",
+                // "-fsanitize=address",
+                "-ftrapv",
+                "-Wall",
+                "-fdiagnostics-color=always"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "",
+        }
+    ],
+    "version": "2.0.0"
+}

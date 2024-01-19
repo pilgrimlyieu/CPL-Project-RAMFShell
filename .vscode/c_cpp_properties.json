@@ -1,0 +1,27 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/include"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "/usr/bin/gcc",
+            "cStandard": "c17",
+            "intelliSenseMode": "linux-gcc-x64",
+            "compilerArgs": [
+                "-O2",
+                "-lm",
+                "-march=native",
+                "-fno-strict-aliasing",
+                "-Wall",
+                "-fdiagnostics-color=always"
+            ]
+        }
+    ],
+    "version": 4
+}
