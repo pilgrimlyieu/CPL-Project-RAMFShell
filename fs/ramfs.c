@@ -242,7 +242,7 @@ ssize_t rwrite(fd_t fd, const void* buf, size_t count) { // Write to a file desc
     if (!(fd_usable(fd) && fd_writable(fd))) {
         return FAILURE;
     }
-    if (Handles[fd]->f->size < Handles[fd]->offset + count) { // Do not how to know bytes length of `buf`, hope `count` will not larger than `buf`. Sad :(
+    if (Handles[fd]->f->size < Handles[fd]->offset + count) { // Don't know how to get bytes length of `buf`, hope `count` will not larger than `buf`. Sad :(
         Handles[fd]->f->size = Handles[fd]->offset + count;
         Handles[fd]->f->content = realloc(Handles[fd]->f->content, Handles[fd]->f->size);
     }
@@ -261,7 +261,7 @@ ssize_t rread(fd_t fd, void* buf, size_t count) { // Read from a file descriptor
     }
     size_t begin = Handles[fd]->offset;
     for (; Handles[fd]->offset < begin + count && Handles[fd]->offset < Handles[fd]->f->size; Handles[fd]->offset++) {
-        ((char*) buf)[Handles[fd]->offset] = ((char*) Handles[fd]->f->content)[Handles[fd]->offset];
+        ((char*) buf)[Handles[fd]->offset - begin] = ((char*) Handles[fd]->f->content)[Handles[fd]->offset];
     }
     return Handles[fd]->offset - begin;
 }
