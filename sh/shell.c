@@ -16,7 +16,7 @@ char *PATH;
 void read_path(void) {
     Node* rc = find("/home/ubuntu/.bashrc");
     char *run_commands = malloc(rc->size);
-    strcpy(run_commands, rc->content);
+    strcpy(run_commands, rc->content); // TODO: fsanitize address ERROR
     char *line = strtok(run_commands, "\n");
     while (line != NULL) {
         if (strncmp(line, "export PATH=", 12) == 0) { // 12 = strlen("export PATH=")
@@ -53,14 +53,6 @@ void access_error(const char* cmd, const char* custom, const char* pathname) {
             printf("%s: %s '%s': No such file or directory\n", cmd, custom, pathname);
             break;
     }
-}
-
-bool can_be_env(const char* str, int position) {
-    int cnt = 0;
-    while (position && str[--position] == '\\') {
-        cnt++;
-    }
-    return cnt % 2 == 0;
 }
 
 char* basic_directory(const char* pathname) { // Remove extre '/' in pathname
@@ -121,6 +113,7 @@ stat scat(const char* pathname) { // Concatenate files and print on the standard
             for (int i = 0; i < node->size; i++) {
                 putchar(((char*) node->content)[i]);
             }
+            putchar('\n');
             return SUCCESS;
         }
     }
@@ -165,21 +158,30 @@ stat stouch(const char* pathname) { // Change file timestamps. If file doesn't e
 stat secho(const char* content) { // Equivalent to `echo <content>`. No need to support escape sequences. Have to support environment variables.
     print("echo %s\n", content);
     char *output = malloc(strlen(content) + 1);
-    for (int i = 0, j = 0; content[i] != '\0'; ) {
-        bool is_env = can_be_env(content, i);
-        if (content[i] == '$' && is_env && strncmp(content + i, "$PATH", 5) == 0) {
-            output = realloc(output, strlen(output) + strlen(PATH) - 4); // -4 = -5[strlen("$PATH")] + 1['\0']
-            strcat(output, PATH);
-            i += 5;
-            j += strlen(PATH);
-        }
-        else if (content[i] == '$' && !is_env) {
-            output[j++ - 1] = content[i++];
+    bool escape = false;
+    int j = 0;
+    for (int i = 0; content[i] != '\0'; ) {
+        if (escape) {
+            output[j++] = content[i++];
+            escape = false;
         }
         else {
-            output[j++] = content[i++];
+            if (content[i] == '$') {
+                output = realloc(output, strlen(output) + strlen(PATH) - 4); // -4 = -5[strlen("$PATH")] + 1['\0']
+                strcat(output, PATH);
+                i += 5;
+                j += strlen(PATH);
+            }
+            else if (content[i] == '\\') {
+                escape = true;
+                i++;
+            }
+            else {
+                output[j++] = content[i++];
+            }
         }
     }
+    output[j] = '\0';
     puts(output);
     free(output);
     return SUCCESS;
@@ -190,10 +192,12 @@ stat secho(const char* content) { // Equivalent to `echo <content>`. No need to 
 // 1: If the specified command is nonexistent.
 stat swhich(const char* cmd) { // Locate a command.
     print("which %s\n", cmd);
-    char *path = strtok(PATH, ":");
-    while (path != NULL) {
-        if (existed_index(find(path), cmd) != FAILURE) {
-            printf("%s/%s\n", basic_directory(path), cmd);
+    char *path = malloc(strlen(PATH) + 1);
+    strcpy(path, PATH);
+    char *env_path = strtok(path, ":");
+    while (env_path != NULL) {
+        if (existed_index(find(env_path), cmd) != FAILURE) {
+            printf("%s/%s\n", basic_directory(env_path), cmd);
             return SUCCESS;
         }
     }

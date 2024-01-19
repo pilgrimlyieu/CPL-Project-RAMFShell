@@ -41,20 +41,10 @@ Node* find(const char* pathname) {
 }
 
 Node* find_parent(const char* pathname) {
-    Node *current = root;
-    Node *parent = NULL;
     char *path = malloc(strlen(pathname) + 1);
     strcpy(path, pathname);
-    char *element = strtok(path, "/");
-    while (element != NULL) {
-        parent = current;
-        int index = existed_index(current, element);
-        if (index == FAILURE) {
-            break;
-        }
-        current = current->childs[index];
-        element = strtok(NULL, "/");
-    }
+    path[strlen(path) - strlen(get_basename(pathname))] = '\0';
+    Node *parent = find(path);
     free(path);
     return parent;
 }
