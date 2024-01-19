@@ -7,7 +7,7 @@
 
 #define NRFD 4096
 Node *root = NULL;
-Handle* Handles[NRFD];
+Handle* Handles[NRFD] = {NULL};
 stat FIND_LEVEL = SUCCESS;
 
 // Auxiliary functions
@@ -149,7 +149,7 @@ Node* create_dir(Node* parent, const char* name) {
 }
 
 Node* create_file(Node* parent, const char* name) {
-    if (existed_index(parent, name) != FAILURE) {
+    if (!is_valid_name(name) || existed_index(parent, name) != FAILURE) {
         return NULL;
     }
     Node *file = malloc(sizeof(Node));
@@ -196,14 +196,11 @@ fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a 
         if (flags & O_CREAT) {
             Node *parent = find_parent(pathname);
             char *name = get_basename(pathname);
-            node = create_file(parent, name);
-            if (parent == NULL || !is_valid_name(name) || node == NULL) { // ENOENT, ENOTDIR; EINVAL; EEXIST
-                free(node);
+            if (parent == NULL || (node = create_file(parent, name)) == NULL) { // ENOENT, ENOTDIR; EINVAL, EEXIST
                 return FAILURE;
             }
         }
         else {
-            free(node);
             return FAILURE;
         }
     }
@@ -216,9 +213,8 @@ fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a 
     if (node->type == F) {
         pre_fd(fd);
     }
-    free(node);
     fd_t curr = fd;
-    while (Handles[fd]->used) {
+    while (Handles[fd] != NULL && Handles[fd]->used) {
         if (++fd == NRFD) {
             fd = 0;
         }
