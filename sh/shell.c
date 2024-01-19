@@ -44,6 +44,17 @@ void read_path(void) {
     free(run_commands);
 }
 
+void cannot_access(const char* cmd, const char* pathname) {
+    switch (FIND_LEVEL) {
+        case (ENOTDIR):
+            printf("%s: cannot access '%s': Not a directory\n", cmd, pathname);
+            break;
+        case (ENOENT):
+            printf("%s: cannot access '%s': No such file or directory\n", cmd, pathname);
+            break;
+    }
+}
+
 // STATUS
 // 0: If OK.
 // 1: If minor problems (e.g., cannot access subdirectory).
@@ -51,14 +62,7 @@ stat sls(const char* pathname) { // List directory contents.
     print("ls %s\n", pathname);
     Node *node = find(pathname);
     if (node == NULL) {
-        switch (FIND_LEVEL) {
-            case (ENOTDIR):
-                printf("ls: cannot access '%s': Not a directory\n", pathname);
-                break;
-            case (ENOENT):
-                printf("ls: cannot access '%s': No such file or directory\n", pathname);
-                break;
-        }
+        cannot_access("ls", pathname);
         return PROBLEM;
     }
     else {
@@ -77,7 +81,23 @@ stat sls(const char* pathname) { // List directory contents.
 
 stat scat(const char* pathname) { // Concatenate files and print on the standard output.
     print("cat %s\n", pathname);
-
+    Node *node = find(pathname);
+    if (node == NULL) {
+        cannot_access("cat", pathname);
+        return PROBLEM;
+    }
+    else {
+        if (node->type == D) {
+            printf("cat: %s: Is a directory\n", pathname);
+            return PROBLEM;
+        }
+        else {
+            for (int i = 0; i < node->size; i++) {
+                putchar(((char*) node->content)[i]);
+            }
+            return SUCCESS;
+        }
+    }
 }
 
 stat smkdir(const char* pathname) { // Make directories.

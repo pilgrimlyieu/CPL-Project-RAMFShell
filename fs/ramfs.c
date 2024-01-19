@@ -65,7 +65,7 @@ void remove_node(Node* parent, Node* node) {
     for (int i = index; i < parent->nchilds; i++) {
         parent->childs[i] = parent->childs[i + 1];
     }
-    parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node *));
+    parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node*));
     if (node->type == F) {
         free(node->content);
     }
@@ -142,7 +142,7 @@ Node* create_dir(Node* parent, const char* name) {
     dir->childs = NULL;
     if (parent != NULL) {
         parent->nchilds++;
-        parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node *));
+        parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node*));
         parent->childs[parent->nchilds - 1] = dir;
     }
     return dir;
@@ -160,7 +160,7 @@ Node* create_file(Node* parent, const char* name) {
     file->content = NULL;
     if (parent != NULL) {
         parent->nchilds++;
-        parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node *));
+        parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node*));
         parent->childs[parent->nchilds - 1] = file;
     }
     return file;
@@ -250,7 +250,7 @@ ssize_t rwrite(fd_t fd, const void* buf, size_t count) { // Write to a file desc
         Handles[fd]->f->content = realloc(Handles[fd]->f->content, Handles[fd]->f->size);
     }
     for (int i = 0; i < written; i++) {
-        ((char *) Handles[fd]->f->content)[Handles[fd]->offset++] = ((char *) buf)[i];
+        ((char*) Handles[fd]->f->content)[Handles[fd]->offset++] = ((char*) buf)[i];
     }
     return written;
 }
@@ -264,7 +264,7 @@ ssize_t rread(fd_t fd, void* buf, size_t count) { // Read from a file descriptor
     }
     size_t begin = Handles[fd]->offset;
     for (; Handles[fd]->offset < begin + count && Handles[fd]->offset < Handles[fd]->f->size; Handles[fd]->offset++) {
-        ((char *) buf)[Handles[fd]->offset] = ((char *) Handles[fd]->f->content)[Handles[fd]->offset];
+        ((char*) buf)[Handles[fd]->offset] = ((char*) Handles[fd]->f->content)[Handles[fd]->offset];
     }
     return Handles[fd]->offset - begin;
 }
