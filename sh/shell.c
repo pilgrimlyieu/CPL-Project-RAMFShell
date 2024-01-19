@@ -55,6 +55,14 @@ void access_error(const char* cmd, const char* custom, const char* pathname) {
     }
 }
 
+bool can_be_env(const char *str, int position) {
+    int cnt = 0;
+    while (position && str[--position] == '\\') {
+        cnt++;
+    }
+    return cnt % 2 == 0;
+}
+
 // STATUS
 // 0: If OK.
 // 1: If minor problems (e.g., cannot access subdirectory).
@@ -138,7 +146,25 @@ stat stouch(const char* pathname) { // Change file timestamps. If file doesn't e
 
 stat secho(const char* content) { // Equivalent to `echo <content>`. No need to support escape sequences. Have to support environment variables.
     print("echo %s\n", content);
-
+    char *output = malloc(strlen(content) + 1);
+    for (int i = 0, j = 0; content[i] != '\0'; ) {
+        bool is_env = can_be_env(content, i);
+        if (content[i] == '$' && is_env && strncmp(content + i, "$PATH", 5) == 0) {
+            output = realloc(output, strlen(output) + strlen(PATH) - 4); // -4 = -5[strlen("$PATH")] + 1['\0']
+            strcat(output, PATH);
+            i += 5;
+            j += strlen(PATH);
+        }
+        else if (content[i] == '$' && !is_env) {
+            output[j++ - 1] = content[i++];
+        }
+        else {
+            output[j++] = content[i++];
+        }
+    }
+    puts(output);
+    free(output);
+    return SUCCESS;
 }
 
 // STATUS
