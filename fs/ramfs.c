@@ -106,9 +106,12 @@ bool is_valid_path(const char* pathname) {
     if (pathname[0] != '/') { // All `pathname` should be absolute path.
         return false;
     }
-    const char *valid_char = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./";
-    size_t valid = strcspn(pathname, valid_char);
-    return valid == strlen(pathname);
+    for (int i = 0; i < strlen(pathname); i++) {
+        if (!isalnum(pathname[i]) && pathname[i] != '/' && pathname[i] != '.') {
+            return false;
+        }
+    }
+    return true;
 }
 
 int existed_index(const Node* dir, const char* name) {
@@ -181,7 +184,7 @@ void pre_fd(fd_t fd) {
 }
 
 bool fd_usable(fd_t fd) {
-    return Handles[fd]->f->type == F && Handles[fd]->used;
+    return Handles[fd] && Handles[fd]->used && Handles[fd]->f->type == F;
 }
 
 // API functions
@@ -239,16 +242,14 @@ ssize_t rwrite(fd_t fd, const void* buf, size_t count) { // Write to a file desc
     if (!(fd_usable(fd) && fd_writable(fd))) {
         return FAILURE;
     }
-    size_t len = strlen(buf);
-    size_t written = (len < count) ? len : count;
-    if (Handles[fd]->f->size < Handles[fd]->offset + written) {
-        Handles[fd]->f->size = Handles[fd]->offset + written;
+    if (Handles[fd]->f->size < Handles[fd]->offset + count) { // Do not how to know bytes length of `buf`, hope `count` will not larger than `buf`. Sad :(
+        Handles[fd]->f->size = Handles[fd]->offset + count;
         Handles[fd]->f->content = realloc(Handles[fd]->f->content, Handles[fd]->f->size);
     }
-    for (int i = 0; i < written; i++) {
+    for (int i = 0; i < count; i++) {
         ((char*) Handles[fd]->f->content)[Handles[fd]->offset++] = ((char*) buf)[i];
     }
-    return written;
+    return count;
 }
 
 // ERRORS
