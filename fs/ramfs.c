@@ -218,7 +218,11 @@ fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a 
 // ERRORS
 // EBADF: `fd` isn't a valid open file descriptor.
 stat rclose(fd_t fd) { // Close a file descriptor.
-
+    if (fd_usable(fd)) {
+        Handles[fd]->used = false;
+        return SUCCESS;
+    }
+    return FAILURE;
 }
 
 // ERRORS
