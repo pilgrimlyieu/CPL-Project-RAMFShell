@@ -52,16 +52,16 @@ Node* find_parent(const char* pathname) {
 
 void remove_node(Node* parent, Node* node) {
     int index = existed_index(parent, node->name);
-    if (node->type == F) {
-        free(node->content);
-    }
-    free(node->name);
-    free(node);
     parent->nchilds--;
     for (int i = index; i < parent->nchilds; i++) {
         parent->childs[i] = parent->childs[i + 1];
     }
     parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node *));
+    if (node->type == F) {
+        free(node->content);
+    }
+    free(node->name);
+    free(node);
 }
 
 char* get_basename(const char* pathname) {
@@ -196,7 +196,7 @@ fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a 
             return FAILURE;
         }
     }
-    Handle *handle = malloc(sizeof(handle));
+    Handle *handle = malloc(sizeof(Handle));
     handle->offset = 0;
     handle->f = node;
     handle->flags = flags;
