@@ -65,7 +65,7 @@ void remove_node(Node* parent, Node* node) {
 }
 
 char* get_basename(const char* pathname) {
-    char *start = (char*)pathname + strlen(pathname) - 1;
+    char *start = (char*) pathname + strlen(pathname) - 1;
     int len = 0;
     while (start >= pathname && *start == '/') {
         start--;
@@ -102,7 +102,7 @@ bool is_valid_path(const char* pathname) {
     return valid == strlen(pathname);
 }
 
-int existed_index(const Node *dir, const char* name) {
+int existed_index(const Node* dir, const char* name) {
     if (dir != NULL && dir->type == D) {
         for (int i = 0; i < dir->nchilds; i++) {
             if (strcmp(dir->childs[i]->name, name) == 0) {
@@ -228,7 +228,7 @@ stat rclose(fd_t fd) { // Close a file descriptor.
 // ERRORS
 // EBADF:  `fd` is not a valid file descriptor or is not open for writing.
 // EISDIR: `fd` refers to a directory.
-ssize_t rwrite(fd_t fd, const void *buf, size_t count) { // Write to a file descriptor.
+ssize_t rwrite(fd_t fd, const void* buf, size_t count) { // Write to a file descriptor.
     if (!(fd_usable(fd) && fd_writable(fd))) {
         return FAILURE;
     }
@@ -247,7 +247,7 @@ ssize_t rwrite(fd_t fd, const void *buf, size_t count) { // Write to a file desc
 // ERRORS
 // EBADF:  `fd` is not a valid file descriptor or is not open for reading.
 // EISDIR: `fd` refers to a directory.
-ssize_t rread(fd_t fd, void *buf, size_t count) { // Read from a file descriptor.
+ssize_t rread(fd_t fd, void* buf, size_t count) { // Read from a file descriptor.
     if (!(fd_usable(fd) && fd_readable(fd))) {
         return FAILURE;
     }

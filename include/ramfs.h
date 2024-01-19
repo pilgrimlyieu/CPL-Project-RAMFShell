@@ -29,13 +29,13 @@
 #define ENOTEMPTY 7
 
 
-typedef intptr_t ssize_t;
+typedef intptr_t  ssize_t;
 typedef uintptr_t size_t;
-typedef long off_t;
-typedef int fd_t;
-typedef int flags_t;
-typedef int whence_t;
-typedef int stat;
+typedef long      off_t;
+typedef int       fd_t;
+typedef int       flags_t;
+typedef int       whence_t;
+typedef int       stat;
 
 typedef struct Node {
     enum {F, D} type;
@@ -55,18 +55,29 @@ typedef struct Handle {
     bool used;
 } Handle;
 
-fd_t ropen(const char* pathname, flags_t flags);
-stat rclose(fd_t fd);
-ssize_t rwrite(fd_t fd, const void *buf, size_t count);
-ssize_t rread(fd_t fd, void *buf, size_t count);
-off_t rseek(fd_t fd, off_t offset, whence_t whence);
-stat rmkdir(const char* pathname);
-stat rrmdir(const char* pathname);
-stat runlink(const char* pathname);
-void init_ramfs();
-void close_ramfs();
-Node* find(const char* pathname);
+// Auxiliary functions
+Node* find          (const char* pathname);
+Node* find_parent   (const char* pathname);
+void  remove_node   (Node* parent, Node* node);
+char* get_basename  (const char* pathname);
+bool  is_valid_name (const char* name);
+bool  is_valid_path (const char* pathname);
+int   existed_index (const Node* dir, const char* name);
+bool  fd_readable   (fd_t fd);
+bool  fd_writable   (fd_t fd);
+Node* create_dir    (Node* parent, const char* name);
+Node* create_file   (Node* parent, const char* name);
+void  pre_fd        (fd_t fd);
+bool  fd_usable     (fd_t fd);
 
-int existed_index(const Node *dir, const char *name);
-bool is_valid_name(const char *name);
-bool is_valid_path(const char *pathname);
+// API functions
+fd_t    ropen       (const char* pathname, flags_t flags);
+stat    rclose      (fd_t fd);
+ssize_t rwrite      (fd_t fd, const void *buf, size_t count);
+ssize_t rread       (fd_t fd, void *buf, size_t count);
+off_t   rseek       (fd_t fd, off_t offset, whence_t whence);
+stat    rmkdir      (const char* pathname);
+stat    rrmdir      (const char* pathname);
+stat    runlink     (const char* pathname);
+void    init_ramfs  ();
+void    close_ramfs ();
