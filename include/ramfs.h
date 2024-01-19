@@ -73,8 +73,8 @@ bool  fd_usable     (fd_t fd);
 // API functions
 fd_t    ropen       (const char* pathname, flags_t flags);
 stat    rclose      (fd_t fd);
-ssize_t rwrite      (fd_t fd, const void *buf, size_t count);
-ssize_t rread       (fd_t fd, void *buf, size_t count);
+ssize_t rwrite      (fd_t fd, const void* buf, size_t count);
+ssize_t rread       (fd_t fd, void* buf, size_t count);
 off_t   rseek       (fd_t fd, off_t offset, whence_t whence);
 stat    rmkdir      (const char* pathname);
 stat    rrmdir      (const char* pathname);

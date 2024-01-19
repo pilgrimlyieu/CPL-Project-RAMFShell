@@ -55,7 +55,7 @@ void access_error(const char* cmd, const char* custom, const char* pathname) {
     }
 }
 
-bool can_be_env(const char *str, int position) {
+bool can_be_env(const char* str, int position) {
     int cnt = 0;
     while (position && str[--position] == '\\') {
         cnt++;
@@ -63,7 +63,7 @@ bool can_be_env(const char *str, int position) {
     return cnt % 2 == 0;
 }
 
-char *basic_directory(const char *pathname) { // Remove extre '/' in pathname
+char* basic_directory(const char* pathname) { // Remove extre '/' in pathname
     char *basic = malloc(strlen(pathname) + 1);
     int j = 0;
     for (int i = 0; pathname[i] != '\0'; ) {
