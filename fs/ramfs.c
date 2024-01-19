@@ -207,11 +207,10 @@ fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a 
     }
     free(node);
     fd_t curr = fd;
-    if (fd < NRFD - 1) {
-        fd++;
-    }
-    else {
-        for (fd = 0; fd < NRFD && Handles[fd]->used; fd++); // Find an unused `fd`.
+    while (Handles[fd]->used) {
+        if (++fd == NRFD) {
+            fd = 0;
+        }
     }
     return curr;
 }
