@@ -330,5 +330,11 @@ void init_ramfs() {
 }
 
 void close_ramfs() {
-
+    for (int i = 0; i < NRFD; i++) {
+        if (Handles[i] != NULL) {
+            free(Handles[i]);
+        }
+    }
+    free(root->name);
+    free(root);
 }
