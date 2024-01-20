@@ -41,15 +41,22 @@ Node* find(const char* pathname) {
 }
 
 Node* find_parent(const char* pathname) {
-    char *path = malloc(strlen(pathname) + 1);
-    strcpy(path, pathname);
-    path[strlen(path) - strlen(get_basename(pathname))] = '\0';
+    int start = strlen(pathname) - 1;
+    while (start >= 0 && pathname[start] == '/') {
+        start--;
+    }
+    while (start >= 0 && pathname[start] != '/') {
+        start--;
+    }
+    char *path = malloc(start + 2);
+    strncpy(path, pathname, start + 1);
+    path[start + 1] = '\0';
     Node *parent = find(path);
     free(path);
     return parent;
 }
 
-void remove_node(Node* parent, Node* node) {
+void remove_node(Node* parent, Node* node) { // The node must be FILE or empty DIR.
     int index = existed_index(parent, node->name);
     parent->nchilds--;
     for (int i = index; i < parent->nchilds; i++) {
@@ -174,7 +181,7 @@ void pre_fd(fd_t fd) {
 }
 
 bool fd_usable(fd_t fd) {
-    return Handles[fd] && Handles[fd]->used && Handles[fd]->f->type == F;
+    return fd >= 0 && Handles[fd] && Handles[fd]->used && Handles[fd]->f->type == F;
 }
 
 // API functions
