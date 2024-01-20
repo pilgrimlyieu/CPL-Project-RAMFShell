@@ -7,7 +7,9 @@
 
 #define NRFD 4096
 Node *root = NULL;
-Handle* Handles[NRFD] = {NULL};
+Handle *Handles[NRFD] = {NULL};
+fd_t available_fds[NRFD] = {0};
+int fds_top = -1;
 stat FIND_LEVEL = SUCCESS;
 
 // Auxiliary functions
@@ -201,7 +203,6 @@ bool fd_usable(fd_t fd) {
 // EINVAL:  The final component(basename) of `pathname` is invalid.
 // ENONENT: O_CREAT is not set and the named file does not exist. A directory in `pathname` does not exist.
 fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a file.
-    static fd_t fd = 0;
     Node *node = find(pathname);
     if (node == NULL) {
         if (flags & O_CREAT) {
@@ -218,6 +219,7 @@ fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a 
         }
     }
     Handle *handle = malloc(sizeof(Handle));
+    fd_t fd = available_fds[fds_top--];
     Handles[fd] = handle;
     handle->offset = 0;
     handle->f      = node;
@@ -226,13 +228,7 @@ fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a 
     if (node->type == F) {
         pre_fd(fd);
     }
-    fd_t curr = fd;
-    while (Handles[fd] != NULL && Handles[fd]->used) {
-        if (++fd == NRFD) {
-            fd = 0;
-        }
-    }
-    return curr;
+    return fd;
 }
 
 // ERRORS
@@ -240,6 +236,7 @@ fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a 
 stat rclose(fd_t fd) { // Close a file descriptor.
     if (fd_usable(fd)) {
         Handles[fd]->used = false;
+        available_fds[++fds_top] = fd;
         return SUCCESS;
     }
     return FAILURE;
@@ -344,6 +341,9 @@ stat runlink(const char* pathname) { // Delete a file.
 
 void init_ramfs() {
     root = create_dir(NULL, "/");
+    for (int i = NRFD - 1; i >= 0; i--) {
+        available_fds[++fds_top] = i;
+    }
 }
 
 void close_ramfs() {
