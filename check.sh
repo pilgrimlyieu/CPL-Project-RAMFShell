@@ -61,11 +61,12 @@ if [ "$1" == "pro" ]; then
             if [ -s $i.diff ] || [ -s sample/$i.err ]; then
                 echo -e "\033[31mSample-$i '$test' failed.\033[0m"
             else
-                rm $i.diff
-                rm $i.err
                 # 如果测试通过，增加通过的测试数量
                 ((passed_tests++))
             fi
+
+            rm $i.diff
+            rm $i.err
         done
 
         # 根据通过的测试数量和总测试数量，输出相应的消息

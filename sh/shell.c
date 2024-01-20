@@ -28,17 +28,14 @@ void read_path(void) {
                 PATH = realloc(PATH, (strlen(line + 12) + 1));
                 strcpy(PATH, line + 12);
             }
-            else if (path == line + 12) { // "export PATH=$PATH:..."
-                PATH = realloc(PATH, (strlen(line + 17) + strlen(PATH) + 1)); // 17 = strlen("export PATH=$PATH")
-                strcat(PATH, line + 17);
-            }
-            else { // "export PATH=...:$PATH". I guess `$PATH` will not appear in the middle of the line, LOL.
+            else {
                 *path = '\0';
-                PATH = realloc(PATH, (strlen(line + 12) + strlen(PATH) + 1)); // `PATH` is promised initialized, so don't worry about `strlen(NULL)`.
+                PATH = realloc(PATH, strlen(line + 12) + strlen(PATH) - 4); // `PATH` is promised initialized, so don't worry about `strlen(NULL)`.
                 char *temp = malloc(strlen(PATH) + 1);
                 strcpy(temp, PATH);
                 strcpy(PATH, line + 12);
                 strcat(PATH, temp);
+                strcat(PATH, path + 5);
                 free(temp);
             }
         }
