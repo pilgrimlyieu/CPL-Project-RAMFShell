@@ -1,11 +1,12 @@
 #!/bin/bash
 
+# chmod +x check.sh
+
 # 进入 sample 目录
 cd sample
 
 # 循环处理 1 到 5 的文件
-for i in {1..5}
-do
+for i in {1..5}; do
     # 编译 c 文件
     gcc -g -std=c17 -O2 -I ../include $i.c ../fs/ramfs.c ../sh/shell.c -o $i
 
@@ -16,8 +17,7 @@ do
     diff $i.out $i.std > $i.diff
 
     # 如果 .diff 文件为空，则表示测试通过
-    if [ -s $i.diff ]
-    then
+    if [ -s $i.diff ]; then
         echo "Test $i failed."
     else
         echo "Test $i passed."

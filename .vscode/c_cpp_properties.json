@@ -10,9 +10,9 @@
                 "UNICODE",
                 "_UNICODE"
             ],
-            "compilerPath": "/usr/bin/gcc",
+            "compilerPath": "/usr/bin/clang",
             "cStandard": "c17",
-            "intelliSenseMode": "linux-gcc-x64",
+            "intelliSenseMode": "linux-clang-x64",
             "compilerArgs": [
                 "-O2",
                 "-lm",
