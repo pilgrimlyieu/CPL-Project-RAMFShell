@@ -58,7 +58,8 @@ typedef struct Handle {
 // Auxiliary functions
 Node* find          (const char* pathname);
 Node* find_parent   (const char* pathname);
-void  remove_node   (Node* parent, Node* node);
+void  pluck_node    (Node* parent, Node* node);
+void  remove_root   (Node* root);
 char* get_basename  (const char* pathname);
 bool  is_valid_name (const char* name);
 bool  is_valid_path (const char* pathname);

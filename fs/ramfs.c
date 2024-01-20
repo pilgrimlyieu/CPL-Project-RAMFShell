@@ -56,7 +56,7 @@ Node* find_parent(const char* pathname) {
     return parent;
 }
 
-void remove_node(Node* parent, Node* node) { // The node must be FILE or empty DIR.
+void pluck_node(Node* parent, Node* node) { // The node must be FILE or empty DIR.
     int index = existed_index(parent, node->name);
     parent->nchilds--;
     for (int i = index; i < parent->nchilds; i++) {
@@ -74,6 +74,20 @@ void remove_node(Node* parent, Node* node) { // The node must be FILE or empty D
     }
     free(node->name);
     free(node);
+}
+
+void remove_root(Node* root) { // Remove root and all its childs thoroughly.
+    free(root->name);
+    if (root->type == F) {
+        free(root->content);
+    }
+    else if (root->type == D) {
+        for (int i = 0; i < root->nchilds; i++) {
+            remove_root(root->childs[i]);
+        }
+        free(root->childs);
+    }
+    free(root);
 }
 
 char* get_basename(const char* pathname) {
@@ -203,8 +217,10 @@ fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a 
             Node *parent = find_parent(pathname);
             char *name = get_basename(pathname);
             if (parent == NULL || (node = create_file(parent, name)) == NULL) { // ENOENT, ENOTDIR; EINVAL, EEXIST
+                free(name);
                 return FAILURE;
             }
+            free(name);
         }
         else {
             return FAILURE;
@@ -319,7 +335,7 @@ stat rrmdir(const char* pathname) { // Delete a directory.
     if (parent == NULL || dir == NULL || dir->type != D || dir->nchilds != 0) { // ENOENT, ENOTDIR, ENOTEMPTY
         return FAILURE;
     }
-    remove_node(parent, dir);
+    pluck_node(parent, dir);
     return SUCCESS;
 }
 
@@ -332,7 +348,7 @@ stat runlink(const char* pathname) { // Delete a file.
     if (parent == NULL || file == NULL || file->type == D) { // ENOENT, EISDIR
         return FAILURE;
     }
-    remove_node(parent, file);
+    pluck_node(parent, file);
     return SUCCESS;
 }
 
@@ -346,6 +362,5 @@ void close_ramfs() {
             free(Handles[i]);
         }
     }
-    free(root->name);
-    free(root);
+    remove_root(root);
 }

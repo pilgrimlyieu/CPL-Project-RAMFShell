@@ -171,7 +171,7 @@ stat stouch(const char* pathname) { // Change file timestamps. If file doesn't e
 
 stat secho(const char* content) { // Equivalent to `echo <content>`. No need to support escape sequences. Have to support environment variables.
     print("echo %s\n", content);
-    char *output = malloc(strlen(content) + 1);
+    char *output = calloc(strlen(content) + 1, sizeof(char));
     bool escape = false;
     int j = 0;
     for (int i = 0; content[i] != '\0'; ) {
