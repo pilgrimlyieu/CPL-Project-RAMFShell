@@ -22,7 +22,7 @@ cd sample
 # 高级测试
 if [ "$1" == "pro" ]; then
     # 保存 main.c
-    cp ../main.c custom.c
+    mv ../main.c custom.c
 
     # 循环处理指定的文件
     shift
@@ -65,8 +65,7 @@ if [ "$1" == "pro" ]; then
                 ((passed_tests++))
             fi
 
-            rm $i.diff
-            rm $i.err
+            rm $i.diff $i.err
         done
 
         # 根据通过的测试数量和总测试数量，输出相应的消息
@@ -96,15 +95,15 @@ else
         fi
 
         gcc -g -std=c17 -O2 -I ../include $i.c ../fs/ramfs.c ../sh/shell.c -o $i
-        ./$i | sed "s/\x1b\[[0-9;]*m//g" > $i.out
+        ./$i 2>$i.err | sed "s/\x1b\[[0-9;]*m//g" > $i.out
         diff $i.out $i.std > $i.diff
         rm $i $i.out
 
-        if [ -s $i.diff ]; then
+        if [ -s $i.diff ] || [ -s $i.err ]; then
             echo -e "\033[31mSample-$i failed.\033[0m"
         else
             echo "Sample-$i passed."
-            rm $i.diff
+            rm $i.diff $i.err
         fi
 
     done

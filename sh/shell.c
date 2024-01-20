@@ -18,8 +18,9 @@ void read_path(void) {
     if (rc == NULL) {
         return;
     }
-    char *run_commands = malloc(rc->size);
-    strcpy(run_commands, rc->content); // TODO: fsanitize address ERROR
+    char *run_commands = malloc(rc->size + 1);
+    memcpy(run_commands, rc->content, rc->size);
+    run_commands[rc->size] = '\0';
     char *line = strtok(run_commands, "\n");
     while (line != NULL) {
         if (strncmp(line, "export PATH=", 12) == 0) { // 12 = strlen("export PATH=")
@@ -29,8 +30,8 @@ void read_path(void) {
                 strcpy(PATH, line + 12);
             }
             else {
-                *path = '\0';
                 PATH = realloc(PATH, strlen(line + 12) + strlen(PATH) - 4); // `PATH` is promised initialized, so don't worry about `strlen(NULL)`.
+                *path = '\0';
                 char *temp = malloc(strlen(PATH) + 1);
                 strcpy(temp, PATH);
                 strcpy(PATH, line + 12);
@@ -91,7 +92,7 @@ stat sls(const char* pathname) { // List directory contents.
             putchar('\n');
         }
         else {
-            printf("%s\n", node->name);
+            puts(node->name);
         }
         return SUCCESS;
     }
@@ -101,28 +102,26 @@ stat scat(const char* pathname) { // Concatenate files and print on the standard
     print("cat %s\n", pathname);
     Node *node = find(pathname);
     if (node == NULL) {
-    switch (FIND_LEVEL) {
-        case (ENOTDIR):
-            printf("cat: %s: Not a directory\n", pathname);
-            break;
-        case (ENOENT):
-            printf("cat: %s: No such file or directory\n", pathname);
-            break;
+        switch (FIND_LEVEL) {
+            case (ENOTDIR):
+                printf("cat: %s: Not a directory\n", pathname);
+                break;
+            case (ENOENT):
+                printf("cat: %s: No such file or directory\n", pathname);
+                break;
+        }
+        return PROBLEM;
     }
+    else if (node->type == D) {
+        printf("cat: %s: Is a directory\n", pathname);
         return PROBLEM;
     }
     else {
-        if (node->type == D) {
-            printf("cat: %s: Is a directory\n", pathname);
-            return PROBLEM;
+        for (int i = 0; i < node->size; i++) {
+            putchar(((char*) node->content)[i]);
         }
-        else {
-            for (int i = 0; i < node->size; i++) {
-                putchar(((char*) node->content)[i]);
-            }
-            putchar('\n');
-            return SUCCESS;
-        }
+        putchar('\n');
+        return SUCCESS;
     }
 }
 
@@ -178,8 +177,9 @@ stat secho(const char* content) { // Equivalent to `echo <content>`. No need to 
         }
         else {
             if (content[i] == '$') {
-                output = realloc(output, strlen(output) + strlen(PATH) - 4); // -4 = -5[strlen("$PATH")] + 1['\0']
-                strcat(output, PATH);
+                output = realloc(output, j + strlen(PATH) + 1);
+                memcpy(output + j, PATH, strlen(PATH));
+                output[j + strlen(PATH)] = '\0';
                 i += 5;
                 j += strlen(PATH);
             }
@@ -192,7 +192,6 @@ stat secho(const char* content) { // Equivalent to `echo <content>`. No need to 
             }
         }
     }
-    output[j] = '\0';
     puts(output);
     free(output);
     return SUCCESS;

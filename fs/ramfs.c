@@ -41,13 +41,9 @@ Node* find(const char* pathname) {
 }
 
 Node* find_parent(const char* pathname) {
-    int start = strlen(pathname) - 1;
-    while (start >= 0 && pathname[start] == '/') {
-        start--;
-    }
-    while (start >= 0 && pathname[start] != '/') {
-        start--;
-    }
+    int start = strlen(pathname);
+    while (start >= 0 && pathname[--start] == '/');
+    while (start >= 0 && pathname[--start] != '/');
     char *path = malloc(start + 2);
     strncpy(path, pathname, start + 1);
     path[start + 1] = '\0';
@@ -91,17 +87,12 @@ void remove_root(Node* root) { // Remove root and all its childs thoroughly.
 }
 
 char* get_basename(const char* pathname) {
-    char *start = (char*) pathname + strlen(pathname) - 1;
-    int len = 0;
-    while (start >= pathname && *start == '/') {
-        start--;
-    }
-    while (start >= pathname && *start != '/') {
-        len++;
-        start--;
-    }
+    int start = strlen(pathname);
+    int len = 1;
+    while (start >= 0 && pathname[--start] == '/');
+    while (start >= 0 && pathname[--start] != '/' && len++);
     char *basename = malloc(len + 1);
-    strncpy(basename, start + 1, len);
+    strncpy(basename, pathname + start + 1, len);
     basename[len] = '\0';
     return basename;
 }
@@ -227,11 +218,11 @@ fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a 
         }
     }
     Handle *handle = malloc(sizeof(Handle));
-    handle->offset = 0;
-    handle->f = node;
-    handle->flags = flags;
-    handle->used = true;
     Handles[fd] = handle;
+    handle->offset = 0;
+    handle->f      = node;
+    handle->flags  = flags;
+    handle->used   = true;
     if (node->type == F) {
         pre_fd(fd);
     }
@@ -261,13 +252,12 @@ ssize_t rwrite(fd_t fd, const void* buf, size_t count) { // Write to a file desc
     if (!(fd_usable(fd) && fd_writable(fd))) {
         return FAILURE;
     }
-    if (Handles[fd]->f->size < Handles[fd]->offset + count) { // Don't know how to get bytes length of `buf`, hope `count` will not larger than `buf`. Sad :(
+    if (Handles[fd]->f->size < Handles[fd]->offset + count) {
         Handles[fd]->f->size = Handles[fd]->offset + count;
         Handles[fd]->f->content = realloc(Handles[fd]->f->content, Handles[fd]->f->size);
     }
-    for (int i = 0; i < count; i++) {
-        ((char*) Handles[fd]->f->content)[Handles[fd]->offset++] = ((char*) buf)[i];
-    }
+    memcpy(Handles[fd]->f->content + Handles[fd]->offset, buf, count);
+    Handles[fd]->offset += count;
     return count;
 }
 
