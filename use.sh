@@ -2,6 +2,9 @@
 
 # chmod +x use.sh
 
+# 定义样例数量
+SAMPLE_COUNT=5
+
 # 检查参数数量
 if [ "$#" -ne 1 ]; then
     echo "Usage: $0 <number>"
@@ -14,9 +17,9 @@ if ! [[ "$1" =~ ^[0-9]+$ ]]; then
     exit 1
 fi
 
-# 检查参数是否在 1 到 5 的范围内
-if [ "$1" -lt 1 ] || [ "$1" -gt 5 ]; then
-    echo "Error: Number must be between 1 and 5."
+# 检查参数是否在 1 到 SAMPLE_COUNT 之间
+if [ "$1" -lt 1 ] || [ "$1" -gt $SAMPLE_COUNT ]; then
+    echo "Error: Number must be between 1 and $SAMPLE_COUNT."
     exit 1
 fi
 
