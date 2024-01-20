@@ -21,13 +21,8 @@
 #define SUCCESS    0
 #define PROBLEM    1
 #define FAILURE   -1
-#define EEXIST    -2
-#define ENOENT    -3
-#define EISDIR    -4
-#define ENOTDIR   -5
-#define EINVAL    -6
-#define EBADF     -7
-#define ENOTEMPTY -8
+#define ENOENT    -2
+#define ENOTDIR   -3
 
 typedef intptr_t  ssize_t;
 typedef uintptr_t size_t;
