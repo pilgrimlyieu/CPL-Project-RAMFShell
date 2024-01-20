@@ -62,7 +62,7 @@ if [ "$1" == "pro" ]; then
                 echo -e "\033[31mSample-$i '$test' failed.\033[0m"
             else
                 rm $i.diff
-                rm -f sample/$i.err
+                rm $i.err
                 # 如果测试通过，增加通过的测试数量
                 ((passed_tests++))
             fi
@@ -100,7 +100,7 @@ else
         rm $i $i.out
 
         if [ -s $i.diff ]; then
-            echo "\033[31mSample-$i failed.\033[0m"
+            echo -e "\033[31mSample-$i failed.\033[0m"
         else
             echo "Sample-$i passed."
             rm $i.diff
