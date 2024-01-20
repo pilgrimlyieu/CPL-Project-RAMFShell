@@ -214,7 +214,9 @@ stat swhich(const char* cmd) { // Locate a command.
     char *env_path = strtok(path, ":");
     while (env_path != NULL) {
         if (existed_index(find(env_path), cmd) != FAILURE) {
-            printf("%s/%s\n", basic_directory(env_path), cmd);
+            char *basic = basic_directory(env_path);
+            printf("%s/%s\n", basic, cmd);
+            free(basic);
             free(path);
             return SUCCESS;
         }

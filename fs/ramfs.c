@@ -62,7 +62,13 @@ void remove_node(Node* parent, Node* node) { // The node must be FILE or empty D
     for (int i = index; i < parent->nchilds; i++) {
         parent->childs[i] = parent->childs[i + 1];
     }
-    parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node*));
+    if (parent->nchilds == 0) {
+        free(parent->childs);
+        parent->childs = NULL;
+    }
+    else {
+        parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node*));
+    }
     if (node->type == F) {
         free(node->content);
     }
