@@ -138,8 +138,8 @@ void remove_root(Node* root) { // Remove root and all its childs thoroughly.
 char* get_basename(const char* pathname) {
     int start = strlen(pathname);
     int len = 1;
-    while (start >= 0 && pathname[--start] == '/');
-    while (start >= 0 && pathname[--start] != '/' && len++);
+    while (start > 0 && pathname[--start] == '/');
+    while (start > 0 && pathname[--start] != '/' && len++);
     char *basename = malloc(len + 1);
     strncpy(basename, pathname + start + 1, len);
     basename[len] = '\0';
@@ -160,10 +160,11 @@ bool is_valid_name(const char* name) {
 }
 
 bool is_valid_path(const char* pathname) {
-    if (pathname[0] != '/') { // All `pathname` should be absolute path.
+    if (pathname == NULL || pathname[0] != '/') { // All `pathname` should be absolute path.
         return false;
     }
-    for (int i = 0; i < strlen(pathname); i++) {
+    int len = strlen(pathname);
+    for (int i = 0; i < len; i++) {
         if (!isalnum(pathname[i]) && pathname[i] != '/' && pathname[i] != '.') {
             return false;
         }
@@ -180,6 +181,10 @@ int existed_index(const Node* dir, const char* name) {
         }
     }
     return FAILURE;
+}
+
+bool fd_usable(fd_t fd) {
+    return fd >= 0 && Handles[fd] && Handles[fd]->used && Handles[fd]->f->type == F;
 }
 
 bool fd_readable(fd_t fd) {
@@ -240,16 +245,11 @@ void pre_fd(fd_t fd) {
     }
 }
 
-bool fd_usable(fd_t fd) {
-    return fd >= 0 && Handles[fd] && Handles[fd]->used && Handles[fd]->f->type == F;
-}
-
 void seek_overflow(fd_t fd) {
     if (Handles[fd]->offset > Handles[fd]->f->size) {
         Handles[fd]->f->content = realloc(Handles[fd]->f->content, Handles[fd]->offset);
-        for (; Handles[fd]->f->size < Handles[fd]->offset; Handles[fd]->f->size++) {
-            ((char*) Handles[fd]->f->content)[Handles[fd]->f->size] = '\0';
-        }
+        memset((char*) Handles[fd]->f->content + Handles[fd]->f->size, '\0', Handles[fd]->offset - Handles[fd]->f->size);
+        Handles[fd]->f->size = Handles[fd]->offset;
     }
 }
 
@@ -365,9 +365,11 @@ off_t rseek(fd_t fd, off_t offset, whence_t whence) { // Reposition read/write f
 // ENOTDIR: A component used as a directory in `pathname` is not a directory.
 stat rmkdir(const char* pathname) { // Create a directory.
     Node *parent = find_parent(pathname);
-    char *name = get_basename(pathname);
-    if (parent == NULL || !is_valid_name(name) || create_dir(parent, name) == NULL) { // ENOENT, ENOTDIR; EINVAL; EEXIST
-        free(name);
+    char *name;
+    if (parent == NULL || !is_valid_name(name = get_basename(pathname)) || create_dir(parent, name) == NULL) { // ENOENT, ENOTDIR; EINVAL; EEXIST
+        if (parent != NULL) {
+            free(name);
+        }
         return FAILURE;
     }
     free(name);
@@ -413,7 +415,9 @@ void close_ramfs() {
     for (int i = 0; i < NRFD; i++) {
         if (Handles[i] != NULL) {
             free(Handles[i]);
+            Handles[i] = NULL;
         }
     }
     remove_root(root);
+    root = NULL;
 }
