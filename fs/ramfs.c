@@ -322,6 +322,9 @@ ssize_t rread(fd_t fd, void* buf, size_t count) { // Read from a file descriptor
 // ERRORS
 // EINVAL: `whence` is not valid.
 off_t rseek(fd_t fd, off_t offset, whence_t whence) { // Reposition read/write file offset.
+    if (!fd_usable(fd)) {
+        return FAILURE;
+    }
     switch (whence) {
         case (SEEK_SET):
             Handles[fd]->offset = offset;
