@@ -5,7 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define NRFD 4096
+#define NRFD      4096
+#define MAX_NODES 65536
 Node *root = NULL;
 Handle *Handles[NRFD] = {NULL};
 fd_t available_fds[NRFD] = {0};
@@ -14,69 +15,69 @@ stat FIND_LEVEL = SUCCESS;
 
 // Auxiliary functions
 
-Node* find(const char* pathname) {
-    if (!is_valid_path(pathname)) {
-        return NULL;
-    }
-    Node *current = root;
-    int len = strlen(pathname);
-    int start = -2;
-    int end = -1;
-    while (1) {
-        start = end;
-        while (start < len && pathname[++start] == '/');
-        end = start;
-        while (end < len && pathname[++end] != '/');
-        if (start == end) {
-            break;
-        }
-        if (current->type == F) {
-            FIND_LEVEL = ENOTDIR;
-            return NULL;
-        }
-        char *element = malloc(end - start + 1);
-        strncpy(element, pathname + start, end - start);
-        element[end - start] = '\0';
-        int index = existed_index(current, element);
-        if (index == FAILURE) {
-            free(element);
-            FIND_LEVEL = ENOENT;
-            return NULL;
-        }
-        free(element);
-        current = current->childs[index];
-    }
-    FIND_LEVEL = SUCCESS;
-    return current;
-}
-
 // Node* find(const char* pathname) {
 //     if (!is_valid_path(pathname)) {
 //         return NULL;
 //     }
 //     Node *current = root;
-//     char *path = malloc(strlen(pathname) + 1);
-//     strcpy(path, pathname);
-//     char *element = strtok(path, "/");
-//     while (element != NULL) {
+//     int len = strlen(pathname);
+//     int start = -2;
+//     int end = -1;
+//     while (1) {
+//         start = end;
+//         while (start < len && pathname[++start] == '/');
+//         end = start;
+//         while (end < len && pathname[++end] != '/');
+//         if (start == end) {
+//             break;
+//         }
 //         if (current->type == F) {
-//             free(path);
 //             FIND_LEVEL = ENOTDIR;
 //             return NULL;
 //         }
+//         char *element = malloc(end - start + 1);
+//         strncpy(element, pathname + start, end - start);
+//         element[end - start] = '\0';
 //         int index = existed_index(current, element);
 //         if (index == FAILURE) {
-//             free(path);
+//             free(element);
 //             FIND_LEVEL = ENOENT;
 //             return NULL;
 //         }
+//         free(element);
 //         current = current->childs[index];
-//         element = strtok(NULL, "/");
 //     }
-//     free(path);
 //     FIND_LEVEL = SUCCESS;
 //     return current;
 // }
+
+Node* find(const char* pathname) {
+    if (!is_valid_path(pathname)) {
+        return NULL;
+    }
+    Node *current = root;
+    char *path = malloc(strlen(pathname) + 1);
+    strcpy(path, pathname);
+    char *element = strtok(path, "/");
+    while (element != NULL) {
+        if (current->type == F) {
+            free(path);
+            FIND_LEVEL = ENOTDIR;
+            return NULL;
+        }
+        int index = existed_index(current, element);
+        if (index == FAILURE) {
+            free(path);
+            FIND_LEVEL = ENOENT;
+            return NULL;
+        }
+        current = current->childs[index];
+        element = strtok(NULL, "/");
+    }
+    free(path);
+    FIND_LEVEL = SUCCESS;
+    return current;
+}
 
 Node* find_parent(const char* pathname) {
     int start = strlen(pathname);
@@ -114,18 +115,24 @@ void pluck_node(Node* parent, Node* node) { // The node must be FILE or empty DI
     free(node);
 }
 
-void remove_root(Node* dir) { // Remove root and all its childs thoroughly.
-    free(dir->name);
-    if (dir->type == F) {
-        free(dir->content);
-    }
-    else if (dir->type == D) {
-        for (int i = 0; i < dir->nchilds; i++) {
-            remove_root(dir->childs[i]);
+void remove_root(Node* root) { // Remove root and all its childs thoroughly.
+    Node* stack[MAX_NODES];
+    int top = 0;
+    stack[top++] = root;
+    while (top > 0) {
+        Node* current = stack[--top];
+        if (current->type == D) {
+            for (int i = 0; i < current->nchilds; i++) {
+                stack[top++] = current->childs[i];
+            }
+            free(current->childs);
         }
-        free(dir->childs);
+        else if (current->type == F) {
+            free(current->content);
+        }
+        free(current->name);
+        free(current);
     }
-    free(dir);
 }
 
 char* get_basename(const char* pathname) {

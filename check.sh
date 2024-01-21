@@ -3,7 +3,7 @@
 # chmod +x check.sh
 
 # 定义样例数量
-SAMPLE_COUNT=5
+SAMPLE_COUNT=6
 
 # 检查参数
 if [ "$#" -eq 0 ]; then
