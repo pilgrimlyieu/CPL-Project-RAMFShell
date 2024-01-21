@@ -237,6 +237,15 @@ bool fd_usable(fd_t fd) {
     return fd >= 0 && Handles[fd] && Handles[fd]->used && Handles[fd]->f->type == F;
 }
 
+void seek_overflow(fd_t fd) {
+    if (Handles[fd]->offset > Handles[fd]->f->size) {
+        Handles[fd]->f->content = realloc(Handles[fd]->f->content, Handles[fd]->offset);
+        for (; Handles[fd]->f->size < Handles[fd]->offset; Handles[fd]->f->size++) {
+            ((char*) Handles[fd]->f->content)[Handles[fd]->f->size] = '\0';
+        }
+    }
+}
+
 // API functions
 
 // ERRORS
@@ -292,6 +301,7 @@ ssize_t rwrite(fd_t fd, const void* buf, size_t count) { // Write to a file desc
     if (!(fd_usable(fd) && fd_writable(fd))) {
         return FAILURE;
     }
+    seek_overflow(fd);
     if (Handles[fd]->f->size < Handles[fd]->offset + count) {
         Handles[fd]->f->size = Handles[fd]->offset + count;
         Handles[fd]->f->content = realloc(Handles[fd]->f->content, Handles[fd]->f->size);
@@ -308,6 +318,7 @@ ssize_t rread(fd_t fd, void* buf, size_t count) { // Read from a file descriptor
     if (!(fd_usable(fd) && fd_readable(fd))) {
         return FAILURE;
     }
+    seek_overflow(fd);
     size_t begin = Handles[fd]->offset;
     for (; Handles[fd]->offset < begin + count && Handles[fd]->offset < Handles[fd]->f->size; Handles[fd]->offset++) {
         ((char*) buf)[Handles[fd]->offset - begin] = ((char*) Handles[fd]->f->content)[Handles[fd]->offset];
