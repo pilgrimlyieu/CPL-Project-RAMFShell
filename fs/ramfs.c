@@ -9,7 +9,7 @@
 Node *root = NULL;
 Handle *Handles[NRFD] = {NULL};
 fd_t available_fds[NRFD] = {0};
-short fds_top = NRFD - 1;
+fd_t fds_top = NRFD - 1;
 stat FIND_LEVEL = SUCCESS;
 
 // Auxiliary functions
@@ -19,28 +19,64 @@ Node* find(const char* pathname) {
         return NULL;
     }
     Node *current = root;
-    char *path = malloc(strlen(pathname) + 1);
-    strcpy(path, pathname);
-    char *element = strtok(path, "/");
-    while (element != NULL) {
+    int len = strlen(pathname);
+    int start = -2;
+    int end = -1;
+    while (1) {
+        start = end;
+        while (start < len && pathname[++start] == '/');
+        end = start;
+        while (end < len && pathname[++end] != '/');
+        if (start == end) {
+            break;
+        }
         if (current->type == F) {
-            free(path);
             FIND_LEVEL = ENOTDIR;
             return NULL;
         }
+        char *element = malloc(end - start + 1);
+        strncpy(element, pathname + start, end - start);
+        element[end - start] = '\0';
         int index = existed_index(current, element);
         if (index == FAILURE) {
-            free(path);
+            free(element);
             FIND_LEVEL = ENOENT;
             return NULL;
         }
+        free(element);
         current = current->childs[index];
-        element = strtok(NULL, "/");
     }
-    free(path);
     FIND_LEVEL = SUCCESS;
     return current;
 }
+
+// Node* find(const char* pathname) {
+//     if (!is_valid_path(pathname)) {
+//         return NULL;
+//     }
+//     Node *current = root;
+//     char *path = malloc(strlen(pathname) + 1);
+//     strcpy(path, pathname);
+//     char *element = strtok(path, "/");
+//     while (element != NULL) {
+//         if (current->type == F) {
+//             free(path);
+//             FIND_LEVEL = ENOTDIR;
+//             return NULL;
+//         }
+//         int index = existed_index(current, element);
+//         if (index == FAILURE) {
+//             free(path);
+//             FIND_LEVEL = ENOENT;
+//             return NULL;
+//         }
+//         current = current->childs[index];
+//         element = strtok(NULL, "/");
+//     }
+//     free(path);
+//     FIND_LEVEL = SUCCESS;
+//     return current;
+// }
 
 Node* find_parent(const char* pathname) {
     int start = strlen(pathname);
@@ -51,6 +87,10 @@ Node* find_parent(const char* pathname) {
     path[start + 1] = '\0';
     Node *parent = find(path);
     free(path);
+    if (parent != NULL && parent->type == F) {
+        FIND_LEVEL = ENOTDIR;
+        return NULL;
+    }
     return parent;
 }
 
@@ -100,7 +140,7 @@ char* get_basename(const char* pathname) {
 }
 
 bool is_valid_name(const char* name) {
-    int8 len = strlen(name);
+    int len = strlen(name);
     if (len > 32) { // Length Limit
         return false;
     }

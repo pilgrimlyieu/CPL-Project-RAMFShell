@@ -18,20 +18,19 @@
 #define SEEK_CUR 1
 #define SEEK_END 2
 
-#define SUCCESS    0
-#define PROBLEM    1
-#define FAILURE   -1
-#define ENOENT    -2
-#define ENOTDIR   -3
+#define SUCCESS  0
+#define PROBLEM  1
+#define FAILURE -1
+#define ENOENT  -2
+#define ENOTDIR -3
 
 typedef intptr_t  ssize_t;
 typedef uintptr_t size_t;
-typedef char      int8;
 typedef long      off_t;
-typedef short     fd_t;
-typedef int8      flags_t;
-typedef int8      whence_t;
-typedef int8      stat;
+typedef int       fd_t;
+typedef int       flags_t;
+typedef int       whence_t;
+typedef int       stat;
 
 typedef struct Node {
     enum {F, D} type;
