@@ -15,42 +15,6 @@ stat FIND_LEVEL = SUCCESS;
 
 // Auxiliary functions
 
-// Node* find(const char* pathname) {
-//     if (!is_valid_path(pathname)) {
-//         return NULL;
-//     }
-//     Node *current = root;
-//     int len = strlen(pathname);
-//     int start = -2;
-//     int end = -1;
-//     while (1) {
-//         start = end;
-//         while (start < len && pathname[++start] == '/');
-//         end = start;
-//         while (end < len && pathname[++end] != '/');
-//         if (start == end) {
-//             break;
-//         }
-//         if (current->type == F) {
-//             FIND_LEVEL = ENOTDIR;
-//             return NULL;
-//         }
-//         char *element = malloc(end - start + 1);
-//         strncpy(element, pathname + start, end - start);
-//         element[end - start] = '\0';
-//         int index = existed_index(current, element);
-//         if (index == FAILURE) {
-//             free(element);
-//             FIND_LEVEL = ENOENT;
-//             return NULL;
-//         }
-//         free(element);
-//         current = current->childs[index];
-//     }
-//     FIND_LEVEL = SUCCESS;
-//     return current;
-// }
-
 Node* find(const char* pathname) {
     if (!is_valid_path(pathname)) {
         return NULL;
@@ -325,11 +289,13 @@ ssize_t rread(fd_t fd, void* buf, size_t count) { // Read from a file descriptor
     if (!(fd_usable(fd) && fd_readable(fd))) {
         return FAILURE;
     }
-    size_t begin = Handles[fd]->offset;
-    for (; Handles[fd]->offset < begin + count && Handles[fd]->offset < Handles[fd]->f->size; Handles[fd]->offset++) {
-        ((char*) buf)[Handles[fd]->offset - begin] = ((char*) Handles[fd]->f->content)[Handles[fd]->offset];
+    size_t count_to_read = count;
+    if (Handles[fd]->offset + count > Handles[fd]->f->size) {
+        count_to_read = Handles[fd]->f->size - Handles[fd]->offset;
     }
-    return Handles[fd]->offset - begin;
+    memcpy(buf, Handles[fd]->f->content + Handles[fd]->offset, count_to_read);
+    Handles[fd]->offset += count_to_read;
+    return count_to_read;
 }
 
 // `whence`

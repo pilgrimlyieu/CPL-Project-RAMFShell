@@ -115,9 +115,7 @@ stat scat(const char* pathname) { // Concatenate files and print on the standard
         return PROBLEM;
     }
     else {
-        for (int i = 0; i < node->size; i++) {
-            putchar(((char*) node->content)[i]);
-        }
+        fwrite(node->content, sizeof(char), node->size, stdout);
         putchar('\n');
         return SUCCESS;
     }
@@ -173,7 +171,7 @@ stat secho(const char* content) { // Equivalent to `echo <content>`. No need to 
             output[j++] = content[i++];
             escape = false;
         }
-        else if (content[i] == '$') {
+        else if (strncmp(content + i, "$PATH", 5) == 0) {
             output = realloc(output, j + strlen(PATH) + 1);
             memcpy(output + j, PATH, strlen(PATH));
             output[j + strlen(PATH)] = '\0';
