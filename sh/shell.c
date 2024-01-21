@@ -209,6 +209,7 @@ stat swhich(const char* cmd) { // Locate a command.
             free(path);
             return SUCCESS;
         }
+        env_path = strtok(NULL, ":");
     }
     free(path);
     return PROBLEM;
