@@ -97,8 +97,8 @@ Node* find_parent(const char* pathname) {
 void pluck_node(Node* parent, Node* node) { // The node must be FILE or empty DIR.
     int index = existed_index(parent, node->name);
     parent->nchilds--;
-    for (int i = index; i < parent->nchilds; i++) {
-        parent->childs[i] = parent->childs[i + 1];
+    if (index != parent->nchilds) {
+        parent->childs[index] = parent->childs[parent->nchilds];
     }
     if (parent->nchilds == 0) {
         free(parent->childs);
@@ -318,7 +318,6 @@ ssize_t rread(fd_t fd, void* buf, size_t count) { // Read from a file descriptor
     if (!(fd_usable(fd) && fd_readable(fd))) {
         return FAILURE;
     }
-    seek_overflow(fd);
     size_t begin = Handles[fd]->offset;
     for (; Handles[fd]->offset < begin + count && Handles[fd]->offset < Handles[fd]->f->size; Handles[fd]->offset++) {
         ((char*) buf)[Handles[fd]->offset - begin] = ((char*) Handles[fd]->f->content)[Handles[fd]->offset];
@@ -375,8 +374,8 @@ stat rmkdir(const char* pathname) { // Create a directory.
 // EACCESS:   Write access to the directory containing `pathname` was not allowed, or one of the directories in the path prefix of `pathname` did not allow search permission. (?)
 stat rrmdir(const char* pathname) { // Delete a directory.
     Node *parent = find_parent(pathname);
-    Node *dir = find(pathname);
-    if (parent == NULL || dir == NULL || dir->type != D || dir->nchilds != 0) { // ENOENT, ENOTDIR, ENOTEMPTY
+    Node *dir;
+    if (parent == NULL || (dir = find(pathname)) == NULL || dir->type != D || dir->nchilds != 0) { // ENOENT, ENOTDIR, ENOTEMPTY
         return FAILURE;
     }
     pluck_node(parent, dir);
@@ -388,8 +387,8 @@ stat rrmdir(const char* pathname) { // Delete a directory.
 // ENOENT: A component in `pathname` does not exist or `pathname` is empty.
 stat runlink(const char* pathname) { // Delete a file.
     Node *parent = find_parent(pathname);
-    Node *file = find(pathname);
-    if (parent == NULL || file == NULL || file->type == D) { // ENOENT, EISDIR
+    Node *file;
+    if (parent == NULL || (file = find(pathname)) == NULL || file->type == D) { // ENOENT, EISDIR
         return FAILURE;
     }
     pluck_node(parent, file);
