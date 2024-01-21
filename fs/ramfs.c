@@ -258,6 +258,9 @@ fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a 
             return FAILURE;
         }
     }
+    if (node->type == F && pathname[strlen(pathname) - 1] == '/') {
+        return FAILURE;
+    }
     Handle *handle = malloc(sizeof(Handle));
     fd_t fd = available_fds[fds_top--];
     Handles[fd] = handle;
