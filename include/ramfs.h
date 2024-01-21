@@ -3,16 +3,16 @@
 #include <stdbool.h>
 
 // Flags
-#define O_APPEND 02000 // Append:   offset->EOF(default 0); Readable
-#define O_CREAT  00100 // Create:   If Exist, open. Otherwise create.
-#define O_TRUNC  01000 // Truncate: If Exist & Writable, clear.
-#define O_RDONLY 00000 // Read only
-#define O_WRONLY 00001 // Write only
-#define O_RDWR   00002 // Read & Write
+#define O_APPEND 0b10000 // Append:   offset->EOF(default 0); Readable
+#define O_CREAT  0b00100 // Create:   If Exist, open. Otherwise create.
+#define O_TRUNC  0b01000 // Truncate: If Exist & Writable, clear.
+#define O_RDONLY 0b00000 // Read only
+#define O_WRONLY 0b00001 // Write only
+#define O_RDWR   0b00010 // Read & Write
 // NOFLAGS: O_RDONLY
-// O_TRUNC  | O_RDONLY (01000) -> O_RDONLY
-// O_RDONLY | O_WRONLY (00001) -> O_WRONLY
-// O_RDWR   | O_WRONLY (00003) -> O_WRONLY
+// O_TRUNC  | O_RDONLY (0b01000) -> O_RDONLY
+// O_RDONLY | O_WRONLY (0b00001) -> O_WRONLY
+// O_RDWR   | O_WRONLY (0b00011) -> O_WRONLY
 
 #define SEEK_SET 0
 #define SEEK_CUR 1
@@ -26,11 +26,12 @@
 
 typedef intptr_t  ssize_t;
 typedef uintptr_t size_t;
+typedef char      int8;
 typedef long      off_t;
-typedef int       fd_t;
-typedef int       flags_t;
-typedef int       whence_t;
-typedef int       stat;
+typedef short     fd_t;
+typedef int8      flags_t;
+typedef int8      whence_t;
+typedef int8      stat;
 
 typedef struct Node {
     enum {F, D} type;

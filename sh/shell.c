@@ -47,17 +47,12 @@ void read_path(void) {
 }
 
 void access_error(const char* cmd, const char* custom, const char* pathname) {
-    switch (FIND_LEVEL) {
-        case (ENOTDIR):
-            printf("%s: %s '%s': Not a directory\n", cmd, custom, pathname);
-            break;
-        case (ENOENT):
-            printf("%s: %s '%s': No such file or directory\n", cmd, custom, pathname);
-            break;
-    }
+    static char *string1 = "No such file or directory";
+    static char *string2 = "Not a directory";
+    printf("%s: %s '%s': %s\n", cmd, custom, pathname, (FIND_LEVEL == ENOENT) ? string1 : string2);
 }
 
-char* basic_directory(const char* pathname) { // Remove extre '/' in pathname
+char* basic_directory(const char* pathname) { // Remove extra '/' in pathname
     char *basic = malloc(strlen(pathname) + 1);
     int j = 0;
     for (int i = 0; pathname[i] != '\0'; ) {
@@ -176,21 +171,19 @@ stat secho(const char* content) { // Equivalent to `echo <content>`. No need to 
             output[j++] = content[i++];
             escape = false;
         }
+        else if (content[i] == '$') {
+            output = realloc(output, j + strlen(PATH) + 1);
+            memcpy(output + j, PATH, strlen(PATH));
+            output[j + strlen(PATH)] = '\0';
+            i += 5;
+            j += strlen(PATH);
+        }
+        else if (content[i] == '\\') {
+            escape = true;
+            i++;
+        }
         else {
-            if (content[i] == '$') {
-                output = realloc(output, j + strlen(PATH) + 1);
-                memcpy(output + j, PATH, strlen(PATH));
-                output[j + strlen(PATH)] = '\0';
-                i += 5;
-                j += strlen(PATH);
-            }
-            else if (content[i] == '\\') {
-                escape = true;
-                i++;
-            }
-            else {
-                output[j++] = content[i++];
-            }
+            output[j++] = content[i++];
         }
     }
     puts(output);
@@ -211,9 +204,8 @@ stat swhich(const char* cmd) { // Locate a command.
     char *env_path = strtok(path, ":");
     while (env_path != NULL) {
         if (existed_index(find(env_path), cmd) != FAILURE) {
-            char *basic = basic_directory(env_path);
-            printf("%s/%s\n", basic, cmd);
-            free(basic);
+            int len = strlen(env_path);
+            printf((env_path[len - 1] == '/') ? "%s%s\n" : "%s/%s\n", env_path, cmd);
             free(path);
             return SUCCESS;
         }
@@ -228,5 +220,7 @@ void init_shell() {
 }
 
 void close_shell() {
-    free(PATH);
+    if (PATH != NULL) {
+        free(PATH);
+    }
 }

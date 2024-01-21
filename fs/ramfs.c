@@ -9,7 +9,7 @@
 Node *root = NULL;
 Handle *Handles[NRFD] = {NULL};
 fd_t available_fds[NRFD] = {0};
-int fds_top = -1;
+short fds_top = NRFD - 1;
 stat FIND_LEVEL = SUCCESS;
 
 // Auxiliary functions
@@ -74,18 +74,18 @@ void pluck_node(Node* parent, Node* node) { // The node must be FILE or empty DI
     free(node);
 }
 
-void remove_root(Node* root) { // Remove root and all its childs thoroughly.
-    free(root->name);
-    if (root->type == F) {
-        free(root->content);
+void remove_root(Node* dir) { // Remove root and all its childs thoroughly.
+    free(dir->name);
+    if (dir->type == F) {
+        free(dir->content);
     }
-    else if (root->type == D) {
-        for (int i = 0; i < root->nchilds; i++) {
-            remove_root(root->childs[i]);
+    else if (dir->type == D) {
+        for (int i = 0; i < dir->nchilds; i++) {
+            remove_root(dir->childs[i]);
         }
-        free(root->childs);
+        free(dir->childs);
     }
-    free(root);
+    free(dir);
 }
 
 char* get_basename(const char* pathname) {
@@ -100,7 +100,7 @@ char* get_basename(const char* pathname) {
 }
 
 bool is_valid_name(const char* name) {
-    size_t len = strlen(name);
+    int8 len = strlen(name);
     if (len > 32) { // Length Limit
         return false;
     }
@@ -342,7 +342,7 @@ stat runlink(const char* pathname) { // Delete a file.
 void init_ramfs() {
     root = create_dir(NULL, "/");
     for (int i = NRFD - 1; i >= 0; i--) {
-        available_fds[++fds_top] = i;
+        available_fds[NRFD - 1 - i] = i;
     }
 }
 
