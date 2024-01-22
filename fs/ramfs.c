@@ -20,31 +20,25 @@ Node* find(const char* pathname) {
         return NULL;
     }
     Node *current = ROOT;
-    const char *start = pathname;
-    const char *end;
-    while ((end = strchr(start, '/')) != NULL) {
-        if (end != start) {
-            int len = end - start;
-            char element[len + 1];
-            strncpy(element, start, len);
-            element[len] = '\0';
-            int index = existed_index(current, element);
-            if (index == FAILURE) {
-                FIND_LEVEL = ENOENT;
-                return NULL;
-            }
-            current = current->childs[index];
+    char *path = malloc(strlen(pathname) + 1);
+    strcpy(path, pathname);
+    char *element = strtok(path, "/");
+    while (element != NULL) {
+        if (current->type == F) {
+            free(path);
+            FIND_LEVEL = ENOTDIR;
+            return NULL;
         }
-        start = end + 1;
-    }
-    if (*start != '\0') {
-        int index = existed_index(current, start);
+        int index = existed_index(current, element);
         if (index == FAILURE) {
+            free(path);
             FIND_LEVEL = ENOENT;
             return NULL;
         }
         current = current->childs[index];
+        element = strtok(NULL, "/");
     }
+    free(path);
     FIND_LEVEL = SUCCESS;
     return current;
 }
