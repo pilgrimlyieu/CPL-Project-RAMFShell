@@ -20,7 +20,8 @@ Node* find(const char* pathname) {
         return NULL;
     }
     Node *current = ROOT;
-    char *path = malloc(strlen(pathname) + 1);
+    int len = strlen(pathname);
+    char *path = malloc(len + 1);
     strcpy(path, pathname);
     char *element = strtok(path, "/");
     while (element != NULL) {
@@ -39,6 +40,10 @@ Node* find(const char* pathname) {
         element = strtok(NULL, "/");
     }
     free(path);
+    if (current->type == F && pathname[len - 1] == '/') {
+        FIND_LEVEL = ENOTDIR;
+        return NULL;
+    }
     FIND_LEVEL = SUCCESS;
     return current;
 }

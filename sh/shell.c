@@ -75,10 +75,6 @@ stat sls(const char* pathname) { // List directory contents.
             putchar('\n');
         }
         else {
-            if (pathname[strlen(pathname) - 1] == '/') {
-                printf("ls: cannot access '%s': Not a directory\n", pathname);
-                return PROBLEM;
-            }
             puts(node->name);
         }
         return SUCCESS;
@@ -112,6 +108,10 @@ stat scat(const char* pathname) { // Concatenate files and print on the standard
 
 stat smkdir(const char* pathname) { // Make directories.
     print("mkdir %s\n", pathname);
+    if (strcmp(pathname, "/") == 0) {
+        printf("mkdir: cannot create directory '/': File exists\n");
+        return PROBLEM;
+    }
     Node *parent = find_parent(pathname);
     if (parent == NULL) {
         access_error("mkdir", "cannot create directory", pathname);
