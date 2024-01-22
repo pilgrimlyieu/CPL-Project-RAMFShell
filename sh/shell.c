@@ -66,7 +66,7 @@ stat sls(const char* pathname) { // List directory contents.
     }
     else {
         if (node->type == D) {
-            for (int i = 0; i < node->size; i++) {
+            for (int i = 0; i < node->nchilds; i++) {
                 printf("%s ", node->childs[i]->name);
             }
             putchar('\n');
