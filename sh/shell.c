@@ -51,7 +51,8 @@ void read_path(void) {
 void access_error(const char* cmd, const char* custom, const char* pathname) {
     static char *string1 = "No such file or directory";
     static char *string2 = "Not a directory";
-    printf("%s: %s '%s': %s\n", cmd, custom, pathname, (FIND_LEVEL == ENOENT) ? string1 : string2);
+    static char *string3 = "File exists";
+    printf("%s: %s '%s': %s\n", cmd, custom, pathname, (FIND_LEVEL == ENOENT) ? string1 : (FIND_LEVEL == ENOTDIR) ? string2 : string3);
 }
 
 // STATUS
@@ -108,10 +109,6 @@ stat scat(const char* pathname) { // Concatenate files and print on the standard
 
 stat smkdir(const char* pathname) { // Make directories.
     print("mkdir %s\n", pathname);
-    if (strcmp(pathname, "/") == 0) {
-        printf("mkdir: cannot create directory '/': File exists\n");
-        return PROBLEM;
-    }
     Node *parent = find_parent(pathname);
     if (parent == NULL) {
         access_error("mkdir", "cannot create directory", pathname);
