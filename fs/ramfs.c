@@ -319,12 +319,21 @@ off_t rseek(fd_t fd, off_t offset, whence_t whence) { // Reposition read/write f
     }
     switch (whence) {
         case (SEEK_SET):
+            if (offset < 0) {
+                return FAILURE;
+            }
             Handles[fd]->offset = offset;
             break;
         case (SEEK_CUR):
+            if (Handles[fd]->offset + offset < 0) {
+                return FAILURE;
+            }
             Handles[fd]->offset += offset;
             break;
         case (SEEK_END):
+            if (Handles[fd]->f->size + offset < 0) {
+                return FAILURE;
+            }
             Handles[fd]->offset = Handles[fd]->f->size + offset;
             break;
         default:
@@ -340,11 +349,12 @@ off_t rseek(fd_t fd, off_t offset, whence_t whence) { // Reposition read/write f
 // ENOTDIR: A component used as a directory in `pathname` is not a directory.
 stat rmkdir(const char* pathname) { // Create a directory.
     Node *parent = find_parent(pathname);
-    char *name;
-    if (parent == NULL || !is_valid_name(name = get_basename(pathname)) || create_dir(parent, name) == NULL) { // ENOENT, ENOTDIR; EINVAL; EEXIST
-        if (parent != NULL) {
-            free(name);
-        }
+    if (parent == NULL) {
+        return FAILURE;
+    }
+    char *name = get_basename(pathname);
+    if (!is_valid_name(name) || create_dir(parent, name) == NULL) { // ENOENT, ENOTDIR; EINVAL; EEXIST
+        free(name);
         return FAILURE;
     }
     free(name);

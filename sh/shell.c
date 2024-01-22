@@ -54,24 +54,6 @@ void access_error(const char* cmd, const char* custom, const char* pathname) {
     printf("%s: %s '%s': %s\n", cmd, custom, pathname, (FIND_LEVEL == ENOENT) ? string1 : string2);
 }
 
-char* basic_directory(const char* pathname) { // Remove extra '/' in pathname
-    char *basic = malloc(strlen(pathname) + 1);
-    int j = 0;
-    for (int i = 0; pathname[i] != '\0'; ) {
-        if (pathname[i] == '/') {
-            basic[j++] = pathname[i++];
-            while (pathname[i] == '/') {
-                i++;
-            }
-        }
-        else {
-            basic[j++] = pathname[i++];
-        }
-    }
-    basic[j] = '\0';
-    return basic;
-}
-
 // STATUS
 // 0: If OK.
 // 1: If minor problems (e.g., cannot access subdirectory).

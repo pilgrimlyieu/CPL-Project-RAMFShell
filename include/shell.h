@@ -3,7 +3,6 @@
 // Auxiliary functions
 void  read_path       (void);
 void  access_error    (const char* cmd, const char* custom, const char* pathname);
-char* basic_directory (const char* pathname);
 
 // Shell functions
 stat sls         (const char* pathname);
