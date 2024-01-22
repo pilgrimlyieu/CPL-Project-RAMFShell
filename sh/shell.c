@@ -67,11 +67,18 @@ stat sls(const char* pathname) { // List directory contents.
     else {
         if (node->type == D) {
             for (int i = 0; i < node->nchilds; i++) {
-                printf("%s ", node->childs[i]->name);
+                printf("%s", node->childs[i]->name);
+                if (i != node->nchilds - 1) {
+                    putchar(' ');
+                }
             }
             putchar('\n');
         }
         else {
+            if (pathname[strlen(pathname) - 1] == '/') {
+                printf("ls: cannot access '%s': Not a directory\n", pathname);
+                return PROBLEM;
+            }
             puts(node->name);
         }
         return SUCCESS;
