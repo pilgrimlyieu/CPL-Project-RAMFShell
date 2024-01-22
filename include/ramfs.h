@@ -80,4 +80,4 @@ void    init_ramfs  ();
 void    close_ramfs ();
 
 extern stat FIND_LEVEL;
-extern Node *root;
+extern Node *ROOT;

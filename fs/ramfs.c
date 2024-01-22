@@ -7,7 +7,7 @@
 
 #define NRFD      4096
 #define MAX_NODES 65536
-Node *root = NULL;
+Node *ROOT = NULL;
 Handle *Handles[NRFD] = {NULL};
 fd_t available_fds[NRFD] = {0};
 fd_t fds_top = NRFD - 1;
@@ -19,31 +19,40 @@ Node* find(const char* pathname) {
     if (!is_valid_path(pathname)) {
         return NULL;
     }
-    Node *current = root;
-    char *path = malloc(strlen(pathname) + 1);
-    strcpy(path, pathname);
-    char *element = strtok(path, "/");
-    while (element != NULL) {
-        if (current->type == F) {
-            free(path);
-            FIND_LEVEL = ENOTDIR;
-            return NULL;
+    Node *current = ROOT;
+    const char *start = pathname;
+    const char *end;
+    while ((end = strchr(start, '/')) != NULL) {
+        if (end != start) {
+            int len = end - start;
+            char element[len + 1];
+            strncpy(element, start, len);
+            element[len] = '\0';
+            int index = existed_index(current, element);
+            if (index == FAILURE) {
+                FIND_LEVEL = ENOENT;
+                return NULL;
+            }
+            current = current->childs[index];
         }
-        int index = existed_index(current, element);
+        start = end + 1;
+    }
+    if (*start != '\0') {
+        int index = existed_index(current, start);
         if (index == FAILURE) {
-            free(path);
             FIND_LEVEL = ENOENT;
             return NULL;
         }
         current = current->childs[index];
-        element = strtok(NULL, "/");
     }
-    free(path);
     FIND_LEVEL = SUCCESS;
     return current;
 }
 
 Node* find_parent(const char* pathname) {
+    if (!is_valid_path(pathname)) {
+        return NULL;
+    }
     int start = strlen(pathname);
     while (start >= 0 && pathname[--start] == '/');
     while (start >= 0 && pathname[--start] != '/');
@@ -371,7 +380,7 @@ stat runlink(const char* pathname) { // Delete a file.
 }
 
 void init_ramfs() {
-    root = create_dir(NULL, "ROOT");
+    ROOT = create_dir(NULL, "ROOT");
     for (int i = NRFD - 1; i >= 0; i--) {
         available_fds[NRFD - 1 - i] = i;
     }
@@ -384,6 +393,6 @@ void close_ramfs() {
             Handles[i] = NULL;
         }
     }
-    remove_root(root);
-    root = NULL;
+    remove_root(ROOT);
+    ROOT = NULL;
 }
