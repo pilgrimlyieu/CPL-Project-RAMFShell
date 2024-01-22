@@ -145,6 +145,10 @@ stat stouch(const char* pathname) { // Change file timestamps. If file doesn't e
         return PROBLEM;
     }
     else {
+        if (node == NULL && pathname[strlen(pathname) - 1] == '/') {
+            printf("touch: cannot touch '%s': No such file or directory\n", pathname);
+            return PROBLEM;
+        }
         char *basename = get_basename(pathname);
         create_file(parent, basename);
         free(basename);
