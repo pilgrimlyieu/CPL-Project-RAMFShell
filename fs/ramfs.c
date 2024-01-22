@@ -159,40 +159,37 @@ bool fd_writable(fd_t fd) {
     return Handles[fd]->flags & O_WRONLY || Handles[fd]->flags & O_RDWR;
 }
 
-Node* create_dir(Node* parent, const char* name) {
-    if (existed_index(parent, name) != FAILURE) {
-        return NULL;
-    }
-    Node *dir = malloc(sizeof(Node));
-    dir->type = D;
-    dir->name = malloc(strlen(name) + 1);
-    strcpy(dir->name, name);
-    dir->nchilds = 0;
-    dir->childs = NULL;
-    if (parent != NULL) {
-        parent->nchilds++;
-        parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node*));
-        parent->childs[parent->nchilds - 1] = dir;
-    }
-    return dir;
-}
-
-Node* create_file(Node* parent, const char* name) {
+Node* create_node(Node* parent, const char* name, bool is_dir) {
     if (!is_valid_name(name) || existed_index(parent, name) != FAILURE) {
         return NULL;
     }
-    Node *file = malloc(sizeof(Node));
-    file->type = F;
-    file->name = malloc(strlen(name) + 1);
-    strcpy(file->name, name);
-    file->size = 0;
-    file->content = NULL;
+    Node *node = malloc(sizeof(Node));
+    node->name = malloc(strlen(name) + 1);
+    strcpy(node->name, name);
+    if (is_dir) {
+        node->type = D;
+        node->nchilds = 0;
+        node->childs = NULL;
+    }
+    else {
+        node->type = F;
+        node->size = 0;
+        node->content = NULL;
+    }
     if (parent != NULL) {
         parent->nchilds++;
         parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node*));
-        parent->childs[parent->nchilds - 1] = file;
+        parent->childs[parent->nchilds - 1] = node;
     }
-    return file;
+    return node;
+}
+
+Node* create_dir(Node* parent, const char* name) {
+    return create_node(parent, name, true);
+}
+
+Node* create_file(Node* parent, const char* name) {
+    return create_node(parent, name, false);
 }
 
 void pre_fd(fd_t fd) {
@@ -293,6 +290,9 @@ ssize_t rread(fd_t fd, void* buf, size_t count) { // Read from a file descriptor
     if (Handles[fd]->offset + count > Handles[fd]->f->size) {
         count_to_read = Handles[fd]->f->size - Handles[fd]->offset;
     }
+    if (count_to_read <= 0) {
+        return 0;
+    }
     memcpy(buf, Handles[fd]->f->content + Handles[fd]->offset, count_to_read);
     Handles[fd]->offset += count_to_read;
     return count_to_read;
@@ -371,7 +371,7 @@ stat runlink(const char* pathname) { // Delete a file.
 }
 
 void init_ramfs() {
-    root = create_dir(NULL, "/");
+    root = create_dir(NULL, "ROOT");
     for (int i = NRFD - 1; i >= 0; i--) {
         available_fds[NRFD - 1 - i] = i;
     }

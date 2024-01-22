@@ -59,12 +59,13 @@ char* get_basename  (const char* pathname);
 bool  is_valid_name (const char* name);
 bool  is_valid_path (const char* pathname);
 int   existed_index (const Node* dir, const char* name);
+bool  fd_usable     (fd_t fd);
 bool  fd_readable   (fd_t fd);
 bool  fd_writable   (fd_t fd);
+Node* create_node   (Node* parent, const char* name, bool is_dir);
 Node* create_dir    (Node* parent, const char* name);
 Node* create_file   (Node* parent, const char* name);
 void  pre_fd        (fd_t fd);
-bool  fd_usable     (fd_t fd);
 
 // API functions
 fd_t    ropen       (const char* pathname, flags_t flags);
