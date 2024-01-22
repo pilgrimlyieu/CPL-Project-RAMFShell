@@ -199,19 +199,30 @@ stat swhich(const char* cmd) { // Locate a command.
     if (PATH == NULL) {
         return PROBLEM;
     }
-    char *path = malloc(strlen(PATH) + 1);
-    strcpy(path, PATH);
-    char *env_path = strtok(path, ":");
-    while (env_path != NULL) {
-        if (existed_index(find(env_path), cmd) != FAILURE) {
-            int len = strlen(env_path);
-            printf((env_path[len - 1] == '/') ? "%s%s\n" : "%s/%s\n", env_path, cmd);
-            free(path);
+    int start = -1;
+    int end = -1;
+    int len = strlen(PATH);
+    while (1) { // `strtok` doesn't work in "/bin:/usr/bin:/usr/" case. To be fixed.
+        start = end;
+        while (start < len && PATH[++start] == ':');
+        end = start;
+        while (end < len && PATH[++end] != ':');
+        if (start == len) {
+            break;
+        }
+        char *element = malloc(end - start + 1);
+        strncpy(element, PATH + start, end - start);
+        element[end - start] = '\0';
+        Node *dir = find(element);
+        int index = existed_index(dir, cmd);
+        if (index != FAILURE && dir->childs[index]->type == F) {
+            int path_name = strlen(element);
+            printf((element[path_name - 1] == '/') ? "%s%s\n" : "%s/%s\n", element, cmd);
+            free(element);
             return SUCCESS;
         }
-        env_path = strtok(NULL, ":");
+        free(element);
     }
-    free(path);
     return PROBLEM;
 }
 
