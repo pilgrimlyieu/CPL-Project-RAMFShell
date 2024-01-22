@@ -16,7 +16,11 @@ stat FIND_LEVEL = SUCCESS;
 // Auxiliary functions
 
 Node* find(const char* pathname) {
-    if (!is_valid_path(pathname)) {
+    if (*pathname == '\0') {
+        FIND_LEVEL = SUCCESS;
+        return NULL;
+    }
+    else if (!is_valid_path(pathname)) {
         return NULL;
     }
     Node *current = ROOT;
