@@ -135,7 +135,7 @@ stat smkdir(const char* pathname) { // Make directories.
 stat stouch(const char* pathname) { // Change file timestamps. If file doesn't exist, create it.
     print("touch %s\n", pathname);
     Node *parent = find_parent(pathname);
-    if (parent == NULL) {
+    if (parent == NULL && FIND_LEVEL) {
         access_error("touch", "cannot touch", pathname);
         return PROBLEM;
     }
