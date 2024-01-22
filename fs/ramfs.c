@@ -151,7 +151,7 @@ int existed_index(const Node* dir, const char* name) {
 }
 
 bool fd_usable(fd_t fd) {
-    return fd >= 0 && Handles[fd] && Handles[fd]->used && Handles[fd]->f->type == F;
+    return fd >= 0 && Handles[fd] != NULL && Handles[fd]->used;
 }
 
 bool fd_readable(fd_t fd) {
@@ -220,9 +220,14 @@ void seek_overflow(fd_t fd) {
 // API functions
 
 // ERRORS
-// EINVAL:  The final component(basename) of `pathname` is invalid.
-// ENONENT: O_CREAT is not set and the named file does not exist. A directory in `pathname` does not exist.
+// EINVAL: Invalid value in flags.
+// EINVAL: The final component(basename) of `pathname` is invalid.
+// ENOENT: O_CREAT is not set and the named file does not exist.
+// ENOENT: A directory in `pathname` does not exist.
 fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a file.
+    if (flags & ~(O_RDONLY | O_WRONLY | O_RDWR | O_CREAT | O_TRUNC | O_APPEND)) {
+        return FAILURE;
+    }
     Node *node = find(pathname);
     if (node == NULL) {
         if (flags & O_CREAT) {
@@ -258,7 +263,9 @@ fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a 
 // EBADF: `fd` isn't a valid open file descriptor.
 stat rclose(fd_t fd) { // Close a file descriptor.
     if (fd_usable(fd)) {
-        Handles[fd]->used = false;
+        // Handles[fd]->used = false;
+        free(Handles[fd]);
+        Handles[fd] = NULL;
         available_fds[++fds_top] = fd;
         return SUCCESS;
     }
@@ -269,7 +276,7 @@ stat rclose(fd_t fd) { // Close a file descriptor.
 // EBADF:  `fd` is not a valid file descriptor or is not open for writing.
 // EISDIR: `fd` refers to a directory.
 ssize_t rwrite(fd_t fd, const void* buf, size_t count) { // Write to a file descriptor.
-    if (!(fd_usable(fd) && fd_writable(fd))) {
+    if (!(fd_usable(fd) && Handles[fd]->f->type == F && fd_writable(fd))) {
         return FAILURE;
     }
     seek_overflow(fd);
@@ -286,7 +293,7 @@ ssize_t rwrite(fd_t fd, const void* buf, size_t count) { // Write to a file desc
 // EBADF:  `fd` is not a valid file descriptor or is not open for reading.
 // EISDIR: `fd` refers to a directory.
 ssize_t rread(fd_t fd, void* buf, size_t count) { // Read from a file descriptor.
-    if (!(fd_usable(fd) && fd_readable(fd))) {
+    if (!(fd_usable(fd) && Handles[fd]->f->type == F && fd_readable(fd))) {
         return FAILURE;
     }
     size_t count_to_read = count;
@@ -308,7 +315,7 @@ ssize_t rread(fd_t fd, void* buf, size_t count) { // Read from a file descriptor
 // ERRORS
 // EINVAL: `whence` is not valid.
 off_t rseek(fd_t fd, off_t offset, whence_t whence) { // Reposition read/write file offset.
-    if (!fd_usable(fd)) {
+    if (!(fd_usable(fd) && Handles[fd]->f->type == F)) {
         return FAILURE;
     }
     switch (whence) {
@@ -359,7 +366,7 @@ stat rmkdir(const char* pathname) { // Create a directory.
 // ENOENT:    A directory component in `pathname` does not exist.
 // ENOTDIR:   `pathname`, or a component used as a directory in `pathname`, is not a directory.
 // ENOTEMPTY: `pathname` is not empty.
-// EACCESS:   Write access to the directory containing `pathname` was not allowed, or one of the directories in the path prefix of `pathname` did not allow search permission. (?)
+// EACCES:    Write access to the directory containing `pathname` was not allowed, or one of the directories in the path prefix of `pathname` did not allow search permission. (?)
 stat rrmdir(const char* pathname) { // Delete a directory.
     Node *parent = find_parent(pathname);
     Node *dir;
