@@ -203,8 +203,7 @@ stat swhich(const char* cmd) { // Locate a command.
         Node *dir = find(element);
         int index = existed_index(dir, cmd);
         if (index != FAILURE && dir->childs[index]->type == F) {
-            int path_name = strlen(element);
-            printf((element[path_name - 1] == '/') ? "%s%s\n" : "%s/%s\n", element, cmd);
+            printf("%s/%s\n", element, cmd);
             free(element);
             return SUCCESS;
         }
