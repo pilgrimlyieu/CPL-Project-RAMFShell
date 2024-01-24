@@ -60,6 +60,16 @@ void access_error(const char* cmd, const char* custom, const char* pathname) {
 // 1: If minor problems (e.g., cannot access subdirectory).
 stat sls(const char* pathname) { // List directory contents.
     print("ls %s\n", pathname);
+    if (*pathname == '\0') {
+        for (int i = 0; i < ROOT->nchilds; i++) {
+            printf("%s", ROOT->childs[i]->name);
+            if (i != ROOT->nchilds - 1) {
+                putchar(' ');
+            }
+        }
+        putchar('\n');
+        return SUCCESS;
+    }
     Node *node = find(pathname);
     if (node == NULL) {
         access_error("ls", "cannot access", pathname);
