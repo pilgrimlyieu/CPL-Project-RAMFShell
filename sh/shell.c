@@ -204,11 +204,19 @@ stat swhich(const char* cmd) { // Locate a command.
     if (PATH == NULL) {
         return PROBLEM;
     }
-    char *start = PATH;
-    char *end;
-    while ((end = strchr(start, ':')) != NULL) {
+    int start = -1;
+    int end = -1;
+    int len = strlen(PATH);
+    while (1) { // `strtok` doesn't work in "/bin:/usr/bin:/usr/" case. To be fixed.
+        start = end;
+        while (start < len && PATH[++start] == ':');
+        end = start;
+        while (end < len && PATH[++end] != ':');
+        if (start == len) {
+            break;
+        }
         char *element = malloc(end - start + 1);
-        strncpy(element, start, end - start);
+        strncpy(element, PATH + start, end - start);
         element[end - start] = '\0';
         Node *dir = find(element);
         int index = existed_index(dir, cmd);
@@ -218,7 +226,6 @@ stat swhich(const char* cmd) { // Locate a command.
             return SUCCESS;
         }
         free(element);
-        start = end + 1;
     }
     return PROBLEM;
 }
