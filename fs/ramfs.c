@@ -21,6 +21,7 @@ Node* find(const char* pathname) {
         return NULL;
     }
     else if (!is_valid_path(pathname)) {
+        FIND_LEVEL = EINVAL;
         return NULL;
     }
     Node *current = ROOT;
@@ -45,7 +46,7 @@ Node* find(const char* pathname) {
     }
     free(path);
     if (current->type == F && pathname[len - 1] == '/') {
-        FIND_LEVEL = ENOTDIR;
+        FIND_LEVEL = EISFILE;
         return NULL;
     }
     FIND_LEVEL = SUCCESS;
@@ -53,9 +54,6 @@ Node* find(const char* pathname) {
 }
 
 Node* find_parent(const char* pathname) {
-    if (!is_valid_path(pathname)) {
-        return NULL;
-    }
     int start = strlen(pathname);
     while (start > 0 && pathname[--start] == '/');
     if (start == 0) {

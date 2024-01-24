@@ -52,7 +52,7 @@ void access_error(const char* cmd, const char* custom, const char* pathname) {
     static char *string1 = "No such file or directory";
     static char *string2 = "Not a directory";
     static char *string3 = "File exists";
-    printf("%s: %s '%s': %s\n", cmd, custom, pathname, (FIND_LEVEL == ENOENT) ? string1 : (FIND_LEVEL == ENOTDIR) ? string2 : string3);
+    printf("%s: %s '%s': %s\n", cmd, custom, pathname, (FIND_LEVEL == ENOENT) ? string1 : (FIND_LEVEL == ENOTDIR || FIND_LEVEL == EISFILE) ? string2 : string3);
 }
 
 // STATUS
@@ -62,10 +62,7 @@ stat sls(const char* pathname) { // List directory contents.
     print("ls %s\n", pathname);
     if (*pathname == '\0') {
         for (int i = 0; i < ROOT->nchilds; i++) {
-            printf("%s", ROOT->childs[i]->name);
-            if (i != ROOT->nchilds - 1) {
-                putchar(' ');
-            }
+            printf("%s ", ROOT->childs[i]->name);
         }
         putchar('\n');
         return SUCCESS;
@@ -78,10 +75,7 @@ stat sls(const char* pathname) { // List directory contents.
     else {
         if (node->type == D) {
             for (int i = 0; i < node->nchilds; i++) {
-                printf("%s", node->childs[i]->name);
-                if (i != node->nchilds - 1) {
-                    putchar(' ');
-                }
+                printf("%s ", node->childs[i]->name);
             }
             putchar('\n');
         }
@@ -94,9 +88,14 @@ stat sls(const char* pathname) { // List directory contents.
 
 stat scat(const char* pathname) { // Concatenate files and print on the standard output.
     print("cat %s\n", pathname);
+    if (!is_valid_path(pathname)) {
+        printf("cat: %s: Invalid argument\n", pathname);
+        return PROBLEM;
+    }
     Node *node = find(pathname);
     if (node == NULL) {
         switch (FIND_LEVEL) {
+            case (EISFILE):
             case (ENOTDIR):
                 printf("cat: %s: Not a directory\n", pathname);
                 break;
@@ -119,13 +118,13 @@ stat scat(const char* pathname) { // Concatenate files and print on the standard
 
 stat smkdir(const char* pathname) { // Make directories.
     print("mkdir %s\n", pathname);
+    if (!is_valid_path(pathname)) {
+        printf("mkdir: cannot create directory '%s': Invalid argument\n", pathname);
+        return PROBLEM;
+    }
     Node *parent = find_parent(pathname);
     if (parent == NULL) {
         access_error("mkdir", "cannot create directory", pathname);
-        return PROBLEM;
-    }
-    else if (parent->type == F) {
-        printf("mkdir: cannot create directory '%s': Not a directory\n", pathname);
         return PROBLEM;
     }
     else {
@@ -144,19 +143,23 @@ stat smkdir(const char* pathname) { // Make directories.
 
 stat stouch(const char* pathname) { // Change file timestamps. If file doesn't exist, create it.
     print("touch %s\n", pathname);
-    Node *node = find(pathname);
-    if (node == NULL && FIND_LEVEL == ENOTDIR) {
-        printf("touch: cannot touch '%s': Not a directory\n", pathname);
+    if (!is_valid_path(pathname)) {
+        printf("touch: cannot touch '%s': Invalid argument\n", pathname);
         return PROBLEM;
     }
     Node *parent = find_parent(pathname);
-    if (parent == NULL && FIND_LEVEL) {
+    if (parent == NULL && FIND_LEVEL != SUCCESS) {
         access_error("touch", "cannot touch", pathname);
         return PROBLEM;
     }
     else {
-        if (node == NULL && pathname[strlen(pathname) - 1] == '/') {
-            printf("touch: cannot touch '%s': No such file or directory\n", pathname);
+        Node *node = find(pathname);
+        if (node == NULL && FIND_LEVEL == EISFILE) {
+            printf("touch: cannot touch '%s': Not a directory\n", pathname);
+            return PROBLEM;
+        }
+        else if (node == NULL && pathname[strlen(pathname) - 1] == '/') {
+            printf("touch: cannot touch '%s': Not such file or directory\n", pathname);
             return PROBLEM;
         }
         char *basename = get_basename(pathname);

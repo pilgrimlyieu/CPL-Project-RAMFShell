@@ -23,6 +23,8 @@
 #define FAILURE -1
 #define ENOENT  -2
 #define ENOTDIR -3
+#define EINVAL  -4
+#define EISFILE -5
 
 typedef intptr_t  ssize_t;
 typedef uintptr_t size_t;
