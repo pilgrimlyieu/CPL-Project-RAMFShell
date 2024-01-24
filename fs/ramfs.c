@@ -57,8 +57,11 @@ Node* find_parent(const char* pathname) {
         return NULL;
     }
     int start = strlen(pathname);
-    while (start >= 0 && pathname[--start] == '/');
-    while (start >= 0 && pathname[--start] != '/');
+    while (start > 0 && pathname[--start] == '/');
+    if (start == 0) {
+        start--;
+    }
+    while (start > 0 && pathname[--start] != '/');
     char *path = malloc(start + 2);
     strncpy(path, pathname, start + 1);
     path[start + 1] = '\0';
@@ -124,7 +127,7 @@ char* get_basename(const char* pathname) {
 
 bool is_valid_name(const char* name) {
     int len = strlen(name);
-    if (len > 32) { // Length Limit
+    if (len > 32 || len == 0) { // Length Limit
         return false;
     }
     for (int i = 0; i < len; i++) {
@@ -239,6 +242,9 @@ fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a 
     }
     Node *node = find(pathname);
     if (node == NULL) {
+        if (pathname[strlen(pathname) - 1] == '/') {
+            return FAILURE;
+        }
         if (flags & O_CREAT) {
             Node *parent = find_parent(pathname);
             char *name = get_basename(pathname);
