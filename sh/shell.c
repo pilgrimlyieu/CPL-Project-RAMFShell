@@ -86,7 +86,7 @@ stat sls(const char* pathname) { // List directory contents.
             putchar('\n');
         }
         else {
-            puts(node->name);
+            puts(pathname);
         }
         return SUCCESS;
     }
