@@ -55,19 +55,20 @@ typedef struct Handle {
 // Auxiliary functions
 Node* find          (const char* pathname);
 Node* find_parent   (const char* pathname);
-void  pluck_node    (Node* parent, Node* node);
-void  remove_root   (Node* root);
-char* get_basename  (const char* pathname);
-bool  is_valid_name (const char* name);
-bool  is_valid_path (const char* pathname);
-int   existed_index (const Node* dir, const char* name);
-bool  fd_usable     (fd_t fd);
-bool  fd_readable   (fd_t fd);
-bool  fd_writable   (fd_t fd);
 Node* create_node   (Node* parent, const char* name, bool is_dir);
 Node* create_dir    (Node* parent, const char* name);
 Node* create_file   (Node* parent, const char* name);
+char* get_basename  (const char* pathname);
+int   existed_index (const Node* dir, const char* name);
+bool  is_valid_name (const char* name);
+bool  is_valid_path (const char* pathname);
+bool  fd_usable     (fd_t fd);
+bool  fd_readable   (fd_t fd);
+bool  fd_writable   (fd_t fd);
 void  pre_fd        (fd_t fd);
+void  seek_overflow (fd_t fd);
+void  pluck_node    (Node* parent, Node* node);
+void  remove_root   (Node* root);
 
 // API functions
 fd_t    ropen       (const char* pathname, flags_t flags);

@@ -11,7 +11,7 @@
     #define print(...) 
 #endif
 
-char *PATH;
+char *PATH = NULL;
 
 void read_path(void) {
     Node* rc = find("/home/ubuntu/.bashrc");
@@ -31,8 +31,7 @@ void read_path(void) {
                 }
                 PATH = malloc(strlen(line + 12) + 1);
                 strcpy(PATH, line + 12);
-            }
-            else {
+            } else {
                 PATH = realloc(PATH, strlen(line + 12) + strlen(PATH) - 4); // `PATH` is promised initialized, so don't worry about `strlen(NULL)`.
                 *path = '\0';
                 char *temp = malloc(strlen(PATH) + 1);
@@ -48,7 +47,7 @@ void read_path(void) {
     free(run_commands);
 }
 
-void access_error(const char* cmd, const char* custom, const char* pathname) {
+void print_error(const char* cmd, const char* custom, const char* pathname) {
     static char *string1 = "No such file or directory";
     static char *string2 = "Not a directory";
     static char *string3 = "File exists";
@@ -69,17 +68,15 @@ stat sls(const char* pathname) { // List directory contents.
     }
     Node *node = find(pathname);
     if (node == NULL) {
-        access_error("ls", "cannot access", pathname);
+        print_error("ls", "cannot access", pathname);
         return PROBLEM;
-    }
-    else {
+    } else {
         if (node->type == D) {
             for (int i = 0; i < node->nchilds; i++) {
                 printf("%s ", node->childs[i]->name);
             }
             putchar('\n');
-        }
-        else {
+        } else {
             puts(pathname);
         }
         return SUCCESS;
@@ -104,12 +101,10 @@ stat scat(const char* pathname) { // Concatenate files and print on the standard
                 break;
         }
         return PROBLEM;
-    }
-    else if (node->type == D) {
+    } else if (node->type == D) {
         printf("cat: %s: Is a directory\n", pathname);
         return PROBLEM;
-    }
-    else {
+    } else {
         fwrite(node->content, sizeof(char), node->size, stdout);
         putchar('\n');
         return SUCCESS;
@@ -124,17 +119,15 @@ stat smkdir(const char* pathname) { // Make directories.
     }
     Node *parent = find_parent(pathname);
     if (parent == NULL) {
-        access_error("mkdir", "cannot create directory", pathname);
+        print_error("mkdir", "cannot create directory", pathname);
         return PROBLEM;
-    }
-    else {
+    } else {
         char *basename = get_basename(pathname);
         if (create_dir(parent, basename) == NULL) {
             printf("mkdir: cannot create directory '%s': File exists\n", pathname);
             free(basename);
             return PROBLEM;
-        }
-        else {
+        } else {
             free(basename);
             return SUCCESS;
         }
@@ -149,16 +142,14 @@ stat stouch(const char* pathname) { // Change file timestamps. If file doesn't e
     }
     Node *parent = find_parent(pathname);
     if (parent == NULL && FIND_LEVEL != SUCCESS) {
-        access_error("touch", "cannot touch", pathname);
+        print_error("touch", "cannot touch", pathname);
         return PROBLEM;
-    }
-    else {
+    } else {
         Node *node = find(pathname);
         if (node == NULL && FIND_LEVEL == EISFILE) {
             printf("touch: cannot touch '%s': Not a directory\n", pathname);
             return PROBLEM;
-        }
-        else if (node == NULL && pathname[strlen(pathname) - 1] == '/') {
+        } else if (node == NULL && pathname[strlen(pathname) - 1] == '/') {
             printf("touch: cannot touch '%s': Not such file or directory\n", pathname);
             return PROBLEM;
         }
@@ -178,19 +169,16 @@ stat secho(const char* content) { // Equivalent to `echo <content>`. No need to 
         if (escape) {
             output[j++] = content[i++];
             escape = false;
-        }
-        else if (strncmp(content + i, "$PATH", 5) == 0) {
+        } else if (strncmp(content + i, "$PATH", 5) == 0) {
             output = realloc(output, j + strlen(PATH) + 1);
             memcpy(output + j, PATH, strlen(PATH));
             output[j + strlen(PATH)] = '\0';
             i += 5;
             j += strlen(PATH);
-        }
-        else if (content[i] == '\\') {
+        } else if (content[i] == '\\') {
             escape = true;
             i++;
-        }
-        else {
+        } else {
             output[j++] = content[i++];
         }
     }
@@ -234,7 +222,6 @@ stat swhich(const char* cmd) { // Locate a command.
 }
 
 void init_shell() {
-    PATH = NULL;
     read_path();
 }
 

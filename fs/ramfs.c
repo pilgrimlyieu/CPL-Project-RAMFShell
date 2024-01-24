@@ -7,11 +7,12 @@
 
 #define NRFD      4096
 #define MAX_NODES 65536
-Node *ROOT = NULL;
-Handle *Handles[NRFD] = {NULL};
-fd_t available_fds[NRFD] = {0};
-fd_t fds_top = NRFD - 1;
-stat FIND_LEVEL = SUCCESS;
+
+Node   *ROOT               = NULL;
+Handle *Handles[NRFD]      = {NULL};
+fd_t   available_fds[NRFD] = {0};
+fd_t   fds_top             = NRFD - 1;
+stat   FIND_LEVEL          = SUCCESS;
 
 // Auxiliary functions
 
@@ -19,8 +20,7 @@ Node* find(const char* pathname) {
     if (*pathname == '\0') {
         FIND_LEVEL = SUCCESS;
         return NULL;
-    }
-    else if (!is_valid_path(pathname)) {
+    } else if (!is_valid_path(pathname)) {
         FIND_LEVEL = EINVAL;
         return NULL;
     }
@@ -56,9 +56,7 @@ Node* find(const char* pathname) {
 Node* find_parent(const char* pathname) {
     int start = strlen(pathname);
     while (start > 0 && pathname[--start] == '/');
-    if (start == 0) {
-        start--;
-    }
+    start = (start == 0) ? -1 : start;
     while (start > 0 && pathname[--start] != '/');
     char *path = malloc(start + 2);
     strncpy(path, pathname, start + 1);
@@ -72,44 +70,36 @@ Node* find_parent(const char* pathname) {
     return parent;
 }
 
-void pluck_node(Node* parent, Node* node) { // The node must be FILE or empty DIR.
-    int index = existed_index(parent, node->name);
-    parent->nchilds--;
-    if (index != parent->nchilds) {
-        parent->childs[index] = parent->childs[parent->nchilds];
+Node* create_node(Node* parent, const char* name, bool is_dir) {
+    if (!is_valid_name(name) || existed_index(parent, name) != FAILURE) {
+        return NULL;
     }
-    if (parent->nchilds == 0) {
-        free(parent->childs);
-        parent->childs = NULL;
+    Node *node = malloc(sizeof(Node));
+    node->name = malloc(strlen(name) + 1);
+    strcpy(node->name, name);
+    if (is_dir) {
+        node->type = D;
+        node->nchilds = 0;
+        node->childs = NULL;
+    } else {
+        node->type = F;
+        node->size = 0;
+        node->content = NULL;
     }
-    else {
+    if (parent != NULL) {
+        parent->nchilds++;
         parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node*));
+        parent->childs[parent->nchilds - 1] = node;
     }
-    if (node->type == F) {
-        free(node->content);
-    }
-    free(node->name);
-    free(node);
+    return node;
 }
 
-void remove_root(Node* root) { // Remove root and all its childs thoroughly.
-    Node* stack[MAX_NODES];
-    int top = 0;
-    stack[top++] = root;
-    while (top > 0) {
-        Node* current = stack[--top];
-        if (current->type == D) {
-            for (int i = 0; i < current->nchilds; i++) {
-                stack[top++] = current->childs[i];
-            }
-            free(current->childs);
-        }
-        else if (current->type == F) {
-            free(current->content);
-        }
-        free(current->name);
-        free(current);
-    }
+Node* create_dir(Node* parent, const char* name) {
+    return create_node(parent, name, true);
+}
+
+Node* create_file(Node* parent, const char* name) {
+    return create_node(parent, name, false);
 }
 
 char* get_basename(const char* pathname) {
@@ -121,6 +111,17 @@ char* get_basename(const char* pathname) {
     strncpy(basename, pathname + start + 1, len);
     basename[len] = '\0';
     return basename;
+}
+
+int existed_index(const Node* dir, const char* name) {
+    if (dir != NULL) {
+        for (int i = 0; i < dir->nchilds; i++) {
+            if (strcmp(dir->childs[i]->name, name) == 0) {
+                return i;
+            }
+        }
+    }
+    return FAILURE;
 }
 
 bool is_valid_name(const char* name) {
@@ -149,17 +150,6 @@ bool is_valid_path(const char* pathname) {
     return true;
 }
 
-int existed_index(const Node* dir, const char* name) {
-    if (dir != NULL) {
-        for (int i = 0; i < dir->nchilds; i++) {
-            if (strcmp(dir->childs[i]->name, name) == 0) {
-                return i;
-            }
-        }
-    }
-    return FAILURE;
-}
-
 bool fd_usable(fd_t fd) {
     return fd >= 0 && Handles[fd] != NULL && Handles[fd]->used;
 }
@@ -170,39 +160,6 @@ bool fd_readable(fd_t fd) {
 
 bool fd_writable(fd_t fd) {
     return Handles[fd]->flags & O_WRONLY || Handles[fd]->flags & O_RDWR;
-}
-
-Node* create_node(Node* parent, const char* name, bool is_dir) {
-    if (!is_valid_name(name) || existed_index(parent, name) != FAILURE) {
-        return NULL;
-    }
-    Node *node = malloc(sizeof(Node));
-    node->name = malloc(strlen(name) + 1);
-    strcpy(node->name, name);
-    if (is_dir) {
-        node->type = D;
-        node->nchilds = 0;
-        node->childs = NULL;
-    }
-    else {
-        node->type = F;
-        node->size = 0;
-        node->content = NULL;
-    }
-    if (parent != NULL) {
-        parent->nchilds++;
-        parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node*));
-        parent->childs[parent->nchilds - 1] = node;
-    }
-    return node;
-}
-
-Node* create_dir(Node* parent, const char* name) {
-    return create_node(parent, name, true);
-}
-
-Node* create_file(Node* parent, const char* name) {
-    return create_node(parent, name, false);
 }
 
 void pre_fd(fd_t fd) {
@@ -227,6 +184,44 @@ void seek_overflow(fd_t fd) {
     }
 }
 
+void pluck_node(Node* parent, Node* node) { // The node must be FILE or empty DIR.
+    int index = existed_index(parent, node->name);
+    parent->nchilds--;
+    if (index != parent->nchilds) {
+        parent->childs[index] = parent->childs[parent->nchilds];
+    }
+    if (parent->nchilds == 0) {
+        free(parent->childs);
+        parent->childs = NULL;
+    } else {
+        parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node*));
+    }
+    if (node->type == F) {
+        free(node->content);
+    }
+    free(node->name);
+    free(node);
+}
+
+void remove_root(Node* root) { // Remove root and all its childs thoroughly.
+    Node* stack[MAX_NODES];
+    int top = 0;
+    stack[top++] = root;
+    while (top > 0) {
+        Node* current = stack[--top];
+        if (current->type == D) {
+            for (int i = 0; i < current->nchilds; i++) {
+                stack[top++] = current->childs[i];
+            }
+            free(current->childs);
+        } else if (current->type == F) {
+            free(current->content);
+        }
+        free(current->name);
+        free(current);
+    }
+}
+
 // API functions
 
 // ERRORS
@@ -242,8 +237,7 @@ fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a 
     if (node == NULL) {
         if (pathname[strlen(pathname) - 1] == '/') {
             return FAILURE;
-        }
-        if (flags & O_CREAT) {
+        } else if (flags & O_CREAT) {
             Node *parent = find_parent(pathname);
             char *name = get_basename(pathname);
             if (parent == NULL || (node = create_file(parent, name)) == NULL) { // ENOENT, ENOTDIR; EINVAL, EEXIST
@@ -251,8 +245,7 @@ fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a 
                 return FAILURE;
             }
             free(name);
-        }
-        else {
+        } else {
             return FAILURE;
         }
     }
@@ -275,14 +268,14 @@ fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a 
 // ERRORS
 // EBADF: `fd` isn't a valid open file descriptor.
 stat rclose(fd_t fd) { // Close a file descriptor.
-    if (fd_usable(fd)) {
-        // Handles[fd]->used = false;
-        free(Handles[fd]);
-        Handles[fd] = NULL;
-        available_fds[++fds_top] = fd;
-        return SUCCESS;
+    if (!fd_usable(fd)) {
+        return FAILURE;
     }
-    return FAILURE;
+    // Handles[fd]->used = false;
+    free(Handles[fd]);
+    Handles[fd] = NULL;
+    available_fds[++fds_top] = fd;
+    return SUCCESS;
 }
 
 // ERRORS
