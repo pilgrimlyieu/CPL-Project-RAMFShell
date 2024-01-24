@@ -3,7 +3,7 @@
         {
             "type": "cppbuild",
             "label": "C Project Build",
-            "command": "/usr/bin/gcc",
+            "command": "/usr/bin/clang",
             "args": [
                 "-g",
                 "${file}",
@@ -15,8 +15,13 @@
                 "sh/shell.c",
                 "-lm",
                 "-march=native",
-                "-fno-strict-aliasing",
                 // "-fsanitize=address",
+                // "-fsanitize=undefined",
+                // "-fsanitize=leak",
+                // "-fsanitize=memory",
+                // "-fsanitize=thread",
+                "-fno-strict-aliasing",
+                "-fno-omit-frame-pointer",
                 "-ftrapv",
                 "-Wall",
                 "-fdiagnostics-color=always"
