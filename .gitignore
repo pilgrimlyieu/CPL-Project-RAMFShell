@@ -8,6 +8,11 @@
 !include
 !include/ramfs.h
 !include/shell.h
+!images
+!images/1.png
+!images/2.png
+!images/3.jpg
+!images/4.jpg
 !main.c
 !README.md
 !README.origin.md
