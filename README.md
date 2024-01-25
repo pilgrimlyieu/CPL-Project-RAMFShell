@@ -2,7 +2,7 @@
 
 > [原 README](./README.origin.md)，[项目框架仓库](https://git.nju.edu.cn/KYCoraxxx/ramfshell)。
 
-**本 README 可能在 GFM 显示效果不是很好，建议去[相应博文](https://pilgrimlyieu.github.io/2024/01/cpl-project-review)查看。**
+**本 README 可能在 GFM 显示效果不是很好，同时内容不会同步更新，建议去[相应博文](https://pilgrimlyieu.github.io/2024/01/cpl-project-review)查看。**
 
 ## 前言
 
@@ -189,7 +189,7 @@ WSL 的好处不必多说了，跟 Windows 衔接好、编译执行快…我在�
 
 还有就是一些学到的技巧（其实就一个）。
 
-![](1.png)
+![](images/1.png)
 
 这是一个简单的程序，在根目录分别创建了两个文件夹和两个文件。但是呢右边的监视变量里面，却只能显示首地址，实在是不方便。
 
@@ -197,7 +197,7 @@ WSL 的好处不必多说了，跟 Windows 衔接好、编译执行快…我在�
 
 当然，其实我是从问题描述学的，实际上就是用 `*(Node*(*)[5])` 就行了，5 是一个自定义的数字，代表数组的长度。这样就能把指针转化为数组来显示了，比较清晰。
 
-![](2.png)
+![](images/2.png)
 
 也就是说，如果一个 `TYPE*` 类型的指针，那么 `*(TYPE(*)[LEN])` 就能把它转化为数组来显示。
 
@@ -451,11 +451,11 @@ cd ..
 
 首先记得蚂蚁老师的课上记得演示过，字面量挨着存放，未定义行为输出了奇怪的结果。于是我猜测，这个 Sanitizer 应该是让每块内存周围都有一块保护区，如果越界访问就会报错。
 
-![](3.jpg)
+![](images/3.jpg)
 
 第一个红框指明了错误类型为 `heap-buffer-overflow`。剩下的红框则表明了错误发生的位置，与相应内存分配的位置。
 
-![](4.jpg)
+![](images/4.jpg)
 
 再来看这个 "Shadow bytes around the buggy address"。首先解释一下部分符号的含义：fa 是 Heap left redzone，反正就是不可访问的。fd 是 Freed heap region，也不可访问。0x，也就是白色的，是可访问的。
 
