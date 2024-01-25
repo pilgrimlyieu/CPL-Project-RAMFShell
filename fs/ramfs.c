@@ -8,11 +8,11 @@
 #define NRFD      4096
 #define MAX_NODES 65536
 
-Node   *ROOT               = NULL;
-Handle *Handles[NRFD]      = {NULL};
-fd_t   available_fds[NRFD] = {0};
-fd_t   fds_top             = NRFD - 1;
-stat   FIND_LEVEL          = SUCCESS;
+Node   *ROOT                = NULL;
+Handle *Handles[NRFD]       = {NULL};
+fd_t    available_fds[NRFD] = {0};
+fd_t    fds_top             = NRFD - 1;
+stat    FIND_LEVEL          = SUCCESS;
 
 // Auxiliary functions
 

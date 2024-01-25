@@ -32,7 +32,7 @@ typedef long      off_t;
 typedef int       fd_t;
 typedef int       flags_t;
 typedef int       whence_t;
-typedef int       stat;
+typedef char      stat;
 
 typedef struct Node {
     enum {F, D} type;

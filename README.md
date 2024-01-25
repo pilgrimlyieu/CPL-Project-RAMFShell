@@ -1,751 +1,714 @@
-# RAM File System Shell
+# CPL Project RAMFShell
 
-> 张哲恺(corax@smail.nju.edu.cn)  冯亚林(191850036@smail.nju.edu.cn)
+> [原 README](./README.origin.md)，[项目框架仓库](https://git.nju.edu.cn/KYCoraxxx/ramfshell)。
 
-[TOC]
+**本 README 可能在 GFM 显示效果不是很好，建议去[相应博文](https://pilgrimlyieu.github.io/2024/01/cpl-project-review)查看。**
 
 ## 前言
 
-在本次项目中，同学们将会尝试完成与平时作业中不同的任务：你不是在一个文件中编写一个完整的程序，而是按照要求完善或实现分布在多个文件中的函数。测试代码中会调用你完成的这些函数，以检测是否完成了题目的要求。
+只是对这次项目大作业进行一个反思，并不会去分析代码，因此在 DDL 前发出来也没什么。
 
-如果你在完成作业的过程中感到困难或疑惑，不妨通过卷首的邮箱与助教取得联系与帮助，请坚持独立自主完成本次作业😊，在本文档中提到了`自行`的部分，除非你已经花费了相当的精力进行搜索与研究仍未解决，否则不要轻易提问，这无益于你自己的能力提升😔。
+首先得感谢一下我自己，开了个时间表，前几天异常专注努力（现在基本又靠近常态了），把其它作业早早解决了，让我能在比较早的时间开始项目。现在看来真是时间卡得很紧，昨天才过了，今天就 DDL，太刺激了。
 
-## 简介
+尽管写得比较烂，但也是 C 语言最大的一个项目了（当然也是第一个项目），即使在我写过寥寥无几的代码中，也是仅次于 OCRC 的工程量了（写的应该比 OCRC 好一点）。由于其特殊的纪念意义，就在 [GitHub 开源](https://github.com/pilgrimlyieu/CPL-Project-RAMFShell)，当然目前还是 Private 状态，我等软院 DDL 结束后再改 Public。
 
-### 背景知识
+回顾大概是翻 commits history，同时看看提交记录，想到啥写啥，可能会有遗漏。
 
-#### 文件系统
+前言也顺便提一下为什么要选这个题目。
 
-文件系统([File System](https://en.wikipedia.org/wiki/File_system))是操作系统的重要组成部分，当你打开Windows系统的资源管理器，你所看到的就是一个文件系统的`UI`界面。通过调用文件系统提供的接口，我们就可以将数据持久化到磁盘上。而C语言为我们提供了一系列接口，使程序员可以通过C语言的接口，基于操作系统对文件进行操作，例如：
+首先排除做游戏，因为这些游戏我都不感兴趣，而且我认为做游戏的工程量还是比较大的（听说有人写了两万行，还是单文件，我整个 AutoHotkey 代码总量也不过万行，这样的代码即使有拆成多文件我想我也是难以维护的），而且做游戏还要学啥 SDL 图形库，我也没啥兴趣。
+
+然后自选，我也不是没有想法，但是呢工程量相较于给的题目来说太小了。其次呢，主观题拿满分对我而言几乎不可能，因此从功利的角度来说做游戏也不是好选择。
+
+客观题除了这个还有 SQL-Minus 与霓虹麻将。后者显然直接排除，类游戏的，不感兴趣。前者是有一点兴致的，我也可以借此机会了解一下 SQL。但是呢，我也提到过了，出于我对 RAMFShell 这个更感兴趣，同时它有个项目框架，我可以学习一下 VSCode 与 WSL 联动写 C 项目的流程，因此最终确定了这个选题。
+
+## 准备
+
+### 基本布置
+
+还好把副屏带回来了。写代码前，副屏看文档与项目 README，主屏记笔记；写代码时，主屏写代码，副屏测试、提交或者看文档 README 等。
+
+### WSL
+
+项目推荐使用 Linux 系统。但我轻薄本带不动虚拟机，而 WSL 又已经使用一段时间了，使用体验非常好，当然就用上了 WSL。
+
+WSL 的好处不必多说了，跟 Windows 衔接好、编译执行快…我在此前用 WSL 做笔记，写 $\LaTeX$ 等时就已经体会到了。
+
+### VSCode
+
+#### 选择
+
+同时决定了使用 VSCode。为什么呢？因为 VSCode 有 WSL 插件，可以直接用 VSCode 打开 WSL 的项目写代码，而不用在 WSL 里面再装个编辑器或者是庞大的 IDE。
+
+但是呢，我也提到过了，我平时的 OJ 作业都是用 CLion 的，而且 CLion 也有 WSL 工具链，还有 Gateway 这样的远程开发环境，同时 CLion 作为一个成熟的 IDE，显然会有更方便的配置和体验更好的代码补全、提示与调试功能，那我为什么不用 CLion 呢？
+
+原因其一，自然是因为我搜阅了网上相关文章，发现评价并不好，体验比 VSCode 差。其二，CLion 占用资源太多了，每次开个 CLion 风扇要呼呼转，然后我还得开个 WSL。
+
+那为什么不用 Vim 呢？WSL 上的 Vim 的问题已经基本解决了，已经能获得跟 Windows 上差不多的体验了，而且 Vim 上一堆插件，比如 vim-easy-align，不是可以很方便地对齐美化代码吗？而且 Vim 的操作不是比 VSCode 残缺功能的 Vim 插件更方便吗？那为什么不用 Vim 呢？
+
+原因其一，Vim 没配调试环境，完全无法调试（没学过 `gdb`）。其二，代码高亮不好看，这也是 Vim 写代码的通病，所以基本不用 Vim 写代码，都是写 markdown 或 $\LaTeX$。相较而言，VSCode 高亮就很漂亮，写代码也是美的享受。
+
+当然也不是一点 Vim 都没用，还是会打开一些文件，对齐一下代码什么的，只不过 VSCode 是主力罢了。
+
+也不是说 VSCode 就完美无瑕。也遇到过一些问题，比如说调试时卡在某一行（一般是调用库函数的行），按单步执行动不了，这种情况我一般在下一步下个断点，然后恢复执行，就能越过去了。但是只是一开始写代码时遇到了，后面没遇到了，网上也没搜到类似问题，可能是初期代码的内存问题？
+
+还有呢就是 VSCode Vim 一些不太方便的问题。但是总的来说没用过什么奇技淫巧，都是很基础的操作，还是写得很舒服的。基本上就用了基本的移动键和修改键，<kbd>v</kbd> 选中代码，<kbd>,</kbd> 重复跳转，<kbd>.</kbd> 重复操作，<kbd>s</kbd> 修改 surroundings 的内容，<kbd>u</kbd> 撤回与重做，<kbd>y</kbd> 复制，<kbd>Ctrl</kbd> + <kbd>O</kbd>/<kbd>I</kbd> 来回跳，<kbd>/</kbd>/<kbd>n</kbd> 搜索与跳转，<kbd>z</kbd> 折叠，<kbd>:</kbd> 然后 `:%y` 复制全部…
+
+#### 配置
+
+既然决定是 VSCode 了，自然要学习一下怎么使用 VSCode 写 C 项目。
+
+我的 `.vscode` 有四个文件，一一来介绍一下。
+
+```json settings.json
+{
+    "C_Cpp.codeAnalysis.clangTidy.checks.disabled": [
+        "clang-analyzer-security.insecureAPI.strcpy",
+        "clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling"
+    ]
+}
+```
+
+`settings.json` 禁掉了两个检查，因为第一个检查会警告我 `strcpy` 不安全，第二个检查会警告我 `strncpy` `memset` `memcpy` 等等不安全。但我一定是要用的，而这些检查挺烦人的，就关掉了。
+
+```json c_cpp_properties.json
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/include"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c17",
+            "intelliSenseMode": "linux-clang-x64",
+            "compilerArgs": [
+                "-O2",
+                "-lm",
+                "-march=native",
+                "-fno-strict-aliasing",
+                "-Wall",
+                "-fdiagnostics-color=always"
+            ]
+        }
+    ],
+    "version": 4
+}
+```
+
+`c_cpp_properties.json` 是 VSCode 的 C/C++ 插件的配置文件。之前用的是 Clangd 插件，现在用回自带的插件了。
+
+`includePath` 里包含了 `include` 目录，这样就不会报错找不到头文件了，而且可以带来更好的补全体验。
+
+`defines` 忘了哪里来的，没啥印象。
+
+`intelliSenseMode` 用的是 `linux-clang-x64`，因为给了更多提示，我一个内存泄漏问题就是它检查出来的。而一开始用 `linux-gcc-x64`，它就只一直在说上面不安全的问题。同时为了搭配使用，也用了 `clang` 作为编译器，毕竟对我这个水平的代码来说，编译器没啥差别。
+
+`cStandard` 和 `compilerArgs` 抄的 OJ 上面的。大致含义：`-O2` 是开启二级优化，`-lm` 是链接数学库，`-march=native` 也是优化，`-fno-strict-aliasing` 是禁用严格别名规则，`-Wall` 是开启所有警告，`-fdiagnostics-color=always` 是开启彩色信息输出。
+
+```json launch.json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/ramfs-shell",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "preLaunchTask": "C Project Build",
+            "setupCommands": [],
+        }
+    ]
+}
+```
+
+`launch.json` 是调试配置文件。取了个朴实无华的名字 `Debug`。执行的目标程序是 `ramfs-shell`，执行前先执行一个 task 叫做 `C Project Build`。
+
+```json tasks.json
+{
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C Project Build",
+            "command": "/usr/bin/clang",
+            "args": [
+                "-g",
+                "${file}",
+                "-o",
+                "${workspaceFolder}/ramfs-shell",
+                "-I",
+                "${workspaceFolder}/include",
+                "fs/ramfs.c",
+                "sh/shell.c",
+                "-lm",
+                "-march=native",
+                // "-fsanitize=address",
+                // "-fsanitize=undefined",
+                // "-fsanitize=leak",
+                // "-fsanitize=memory",
+                // "-fsanitize=thread",
+                "-fno-strict-aliasing",
+                "-fno-omit-frame-pointer",
+                "-ftrapv",
+                "-Wall",
+                "-fdiagnostics-color=always"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "",
+        }
+    ],
+    "version": "2.0.0"
+}
+```
+
+这就是 `tasks.json`，只有这一个 task——`C Project Build`，也是用 `clang`。比起前面，多了点参数，比如 `-g` 是开启调试信息，`-o` 是输出文件名，`-I` 是包含头文件目录，`-fsanitize` 是开启内存检查（注释掉了，调试时只开过 address），`-fno-omit-frame-pointer` 是网上抄的，`-ftrapv` 是检查整数溢出（也是网上抄的）。
+
+总的来说，没什么好说的。可能有点问题，不过我用着没出问题就是了，还有人找我抄配置，我也给了（其实蛮好奇，发起聊天就行了为啥要加好友呢，虽然发起聊天不能发文件）。
+
+#### 技巧
+
+还有就是一些学到的技巧（其实就一个）。
+
+![](1.png)
+
+这是一个简单的程序，在根目录分别创建了两个文件夹和两个文件。但是呢右边的监视变量里面，却只能显示首地址，实在是不方便。
+
+于是我在 StackOverflow 的问题 [How to watch char values of strings pointed by a pointer to pointers in debugger mode of VSCode](https://stackoverflow.com/questions/63278898/how-to-watch-char-values-of-strings-pointed-by-a-pointer-to-pointers-in-debugger) 上找到了答案。
+
+当然，其实我是从问题描述学的，实际上就是用 `*(Node*(*)[5])` 就行了，5 是一个自定义的数字，代表数组的长度。这样就能把指针转化为数组来显示了，比较清晰。
+
+![](2.png)
+
+也就是说，如果一个 `TYPE*` 类型的指针，那么 `*(TYPE(*)[LEN])` 就能把它转化为数组来显示。
+
+这个问题其实问的是另一种情况，也就是 `TYPE**` 类型的指针，想要转成数组型，同时每个元素也还是数组型，例如说一个字符串数组 `char**`，想要用数组显示每一个字符串，同时每一个字符串以数组形式显示每个字符，就可以用 `(TYPE(*(*)[N]))`，N 是字符串个数。
+
+类型解读记不太清了，因此也不太会解读，有时间重新看一看那篇顺时针解读 C 语言的复杂声明的文章。
+
+### `Makefile`
+
+#### 禁止编译自动 commit
+
+一开始就打算了最后要把项目传到 GitHub，如果是默认的 compile 自动 commit，那 commits history 就毫无用处了。因此一开始就禁掉。这个早在开始写项目之前大半个月就弄了，去年年底就做了。
+
+```diff
+diff --git a/Makefile b/Makefile
+index 13ed87c..9985dea 100644
+--- a/Makefile
++++ b/Makefile
+@@ -4,7 +4,7 @@ INC_PATH := include/
+ 
+ all: compile
+ 
+-compile: git
++compile:
+ 	@gcc -g -std=c17 -O2 -I$(INC_PATH) main.c fs/ramfs.c sh/shell.c -o ramfs-shell
+ 
+ run: compile
+ ```
+
+只看了教材关于 Makefile 的部分介绍，课本只是用来联合编译，现在才发现还有别的用途。
+
+至于说会不会给怀疑抄袭作弊，那当然不可能，毕竟我有 100+ commits，而且基本上每个 commit message 都有认真写（虽然说没学习规范，但好歹不是全是单个 `update` 或者 `fix` 什么的），同时还有非常多的提交测评记录，而且还在相关群问过问题、求过样例，所以这种事情完全不担心的。
+
+#### 提交
+
+```makefile Makefile
+submit:
+	$(eval TEMP := $(shell mktemp -d))
+	$(eval BASE := $(shell basename $(CURDIR)))
+	$(eval FILE := ${TEMP}/${TOKEN}.zip)
+	@cd .. && zip -qr ${FILE} ${BASE}/.git
+	@echo "Created submission archive ${FILE}"
+	@curl -m 15 -w "\n" -X POST -F "TOKEN=${TOKEN}" -F "FILE=@${FILE}" \
+		https://public.oj.cpl.icu/api/v2/submission/lab
+	@rm -r ${TEMP}
+```
+
+首先是把提交超时时间从 5 改成 15，5 和 10 都有超时过。然后还改成了 public.oj.cpl.icu，因为 oj.cpl.icu 交不上，估计是代理的问题，也懒得弄，索性用 public 的交。
+
+#### TOKEN
+
+TOKEN 要保密，而 Makefile 又是要 commit 的。因此根目录下有一个 `TOKEN` 文件，里面写了 TOKEN，然后 Makefile 里面就是读取这个文件。
+
+```makefile Makefile
+TOKEN := $(shell cat TOKEN)
+```
+
+也是查的，因为我自己不会写。
+
+#### 测试
+
+然后自己加了一点测试
+
+```makefile Makefile
+test_address:
+	@clang -fsanitize=address -fno-omit-frame-pointer -ftrapv -Wall -fdiagnostics-color=always -g -std=c17 -O2 -I$(INC_PATH) main.c fs/ramfs.c sh/shell.c -o ramfs-shell
+	@./ramfs-shell
+
+test_undefined:
+	@clang -fsanitize=undefined -fno-omit-frame-pointer -ftrapv -Wall -fdiagnostics-color=always -g -std=c17 -O2 -I$(INC_PATH) main.c fs/ramfs.c sh/shell.c -o ramfs-shell
+	@./ramfs-shell
+
+test_leak:
+	@clang -fsanitize=leak -fno-omit-frame-pointer -ftrapv -Wall -fdiagnostics-color=always -g -std=c17 -O2 -I$(INC_PATH) main.c fs/ramfs.c sh/shell.c -o ramfs-shell
+	@./ramfs-shell
+
+test_memory:
+	@clang -fsanitize=memory -fno-omit-frame-pointer -ftrapv -Wall -fdiagnostics-color=always -g -std=c17 -O2 -I$(INC_PATH) main.c fs/ramfs.c sh/shell.c -o ramfs-shell
+	@./ramfs-shell
+
+test_thread:
+	@clang -fsanitize=thread -fno-omit-frame-pointer -ftrapv -Wall -fdiagnostics-color=always -g -std=c17 -O2 -I$(INC_PATH) main.c fs/ramfs.c sh/shell.c -o ramfs-shell
+	@./ramfs-shell
+```
+
+用 `clang` 还有一个原因是，`gcc` 不能用 `-fsanitize=memory` 等，不如就全用 `clang` 了。不过 `compile` 还是用的 `gcc`，毕竟 OJ 那边也是 `gcc`。
+
+### `use.sh`
+
+给了五个样例，要调试的话一个一个自己换太麻烦了，因此让 Copilot 写了个脚本自动化，甚至还有 Usage。样例全放在 `sample` 文件夹（我自己加了个测试，所以是六个）。能看懂大概，但让我自己写肯定不会写。使用前先 `chmod +x use.sh`。
+
+```bash use.sh
+#!/bin/bash
+
+# chmod +x use.sh
+
+# 定义样例数量
+SAMPLE_COUNT=6
+
+# 检查参数数量
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <number>"
+    exit 1
+fi
+
+# 检查参数是否为整数
+if ! [[ "$1" =~ ^[0-9]+$ ]]; then
+    echo "Error: Argument must be an integer."
+    exit 1
+fi
+
+# 检查参数是否在 1 到 SAMPLE_COUNT 之间
+if [ "$1" -lt 1 ] || [ "$1" -gt $SAMPLE_COUNT ]; then
+    echo "Error: Number must be between 1 and $SAMPLE_COUNT."
+    exit 1
+fi
+
+# 复制 sample 文件夹中的 c 文件到根目录，覆盖 main.c
+cp sample/$1.c main.c
+```
+
+使用方法就是 `./use.sh <number>`，number 是样例编号，从 1 到 6。例如说 `./use.sh 3` 就是使用第三个样例。没有加备份功能，因为一开始没有自己手搓样例，后面有了就手动备份了。
+
+### `check.sh`
+
+等到后面所有样例都过了，进入修 bug 环节，就需要对全部测试跑一遍了。同时即使答案正确，也可能有内存泄漏等问题，需要用 Sanitizer 检查。但是 Sanitizer 会大大降低程序运行速度，因此用了两个参数，一个是 `std` 一个是 `pro`，对应基础和高级测试，默认无参数是标准测试。还可以指定测试哪个样例，不指定就是全部。也是 Copilot 写的，也是有 Usage 的，同样的使用前先 `chmod +x check.sh`。
+
+```bash check.sh
+#!/bin/bash
+
+# chmod +x check.sh
+
+# 定义样例数量
+SAMPLE_COUNT=6
+
+# 检查参数
+if [ "$#" -eq 0 ]; then
+    set -- "std" $(seq 1 $SAMPLE_COUNT)
+elif [[ "$1" =~ ^(std|pro)$ ]]; then
+    if [ "$#" -eq 1 ]; then
+        set -- "$1" $(seq 1 $SAMPLE_COUNT)
+    fi
+else
+    set -- "std" "$@"
+fi
+
+# 进入 sample 目录
+cd sample
+
+# 高级测试
+if [ "$1" == "pro" ]; then
+    # 保存 main.c
+    mv ../main.c custom.c
+
+    # 循环处理指定的文件
+    shift
+    for i in "$@"; do
+        # 检查参数是否为整数
+        if ! [[ "$i" =~ ^[0-9]+$ ]]; then
+            echo "Error: Argument must be an integer."
+            exit 1
+        fi
+
+        if [ "$i" -lt 1 ] || [ "$i" -gt $SAMPLE_COUNT ]; then
+            echo "Error: Number must be between 1 and $SAMPLE_COUNT."
+            exit 1
+        fi
+
+        # 使用 use.sh 替换 main.c
+        pushd .. > /dev/null
+        ./use.sh $i
+        popd > /dev/null
+
+        # 定义所有的测试
+        tests=("test_address" "test_memory" "test_undefined" "test_leak" "test_thread")
+
+        # 初始化通过的测试数量为 0
+        passed_tests=0
+
+        # 运行测试
+        for test in "${tests[@]}"; do
+            pushd .. > /dev/null
+            make $test 2> sample/$i.err | sed "s/\x1b\[[0-9;]*m//g" > sample/$i.out
+            popd > /dev/null
+            diff $i.out $i.std > $i.diff
+            rm $i.out
+
+            # 如果 .diff 文件不为空或 .err 文件不为空，则表示测试失败
+            if [ -s $i.diff ] || [ -s sample/$i.err ]; then
+                echo -e "\033[31mSample-$i '$test' failed.\033[0m"
+            else
+                # 如果测试通过，增加通过的测试数量
+                ((passed_tests++))
+            fi
+
+            rm $i.diff $i.err
+        done
+
+        # 根据通过的测试数量和总测试数量，输出相应的消息
+        if [ $passed_tests -eq ${#tests[@]} ]; then
+            echo "Sample-$i passed all ${#tests[@]} tests."
+        elif [ $passed_tests -gt 0 ]; then
+            echo -e "\033[31mSample-$i passed $passed_tests of ${#tests[@]} tests.\033[0m"
+        fi
+
+    done
+
+    # 恢复 main.c
+    mv custom.c ../main.c
+else
+    # 基础测试
+    shift
+    for i in "$@"; do
+        # 检查参数是否为整数
+        if ! [[ "$i" =~ ^[0-9]+$ ]]; then
+            echo "Error: Argument must be an integer."
+            exit 1
+        fi
+
+        if [ "$i" -lt 1 ] || [ "$i" -gt $SAMPLE_COUNT ]; then
+            echo "Error: Number must be between 1 and $SAMPLE_COUNT."
+            exit 1
+        fi
+
+        gcc -g -std=c17 -O2 -I ../include $i.c ../fs/ramfs.c ../sh/shell.c -o $i
+        ./$i 2>$i.err | sed "s/\x1b\[[0-9;]*m//g" > $i.out
+        diff $i.out $i.std > $i.diff
+        rm $i $i.out
+
+        if [ -s $i.diff ] || [ -s $i.err ]; then
+            echo -e "\033[31mSample-$i failed.\033[0m"
+        else
+            echo "Sample-$i passed."
+            rm $i.diff $i.err
+        fi
+
+    done
+fi
+
+# 返回到原来的目录
+cd ..
+```
+
+还用了 ANSI 转义序列强调错误。
+
+基础测试会输出 `.diff` 和 `.err` 文件，高级测试则不会（因为每个样例都会把所有测试过一遍，即是一个样例没过，下一个样例也会继续测试）。
+
+### Sanitizer
+
+以 [31781e7](https://github.com/pilgrimlyieu/CPL-Project-RAMFShell/commit/31781e7f076f0d998e94e21d472b3625db284d01) 的第二个样例为例进行测试，讲一下我对 `-fsanitize=address` 的简单理解。
+
+首先记得蚂蚁老师的课上记得演示过，字面量挨着存放，未定义行为输出了奇怪的结果。于是我猜测，这个 Sanitizer 应该是让每块内存周围都有一块保护区，如果越界访问就会报错。
+
+![](3.jpg)
+
+第一个红框指明了错误类型为 `heap-buffer-overflow`。剩下的红框则表明了错误发生的位置，与相应内存分配的位置。
+
+![](4.jpg)
+
+再来看这个 "Shadow bytes around the buggy address"。首先解释一下部分符号的含义：fa 是 Heap left redzone，反正就是不可访问的。fd 是 Freed heap region，也不可访问。0x，也就是白色的，是可访问的。
+
+那 x 代表的数字是什么意思的？
+
+我查了一下，1 个影子字节（Shadow Byte）对应 8 个字节的内存，后面的数字如果是 00，代表这 8 个字节都可「寻址」，也就是说都可用，如果是部分可用，比如说 3 个可寻址，那就是 03。8 个好像是因为为了「对齐」，以方便寻址？
+
+错误发生在被圈出来的 05，数了一下有 5 个 00，1 个 05，也就是 45 个字节可寻址，但是呢上面却写了 "READ of size 46 at ..."，也就是说，访问越界了。
+
+再看一看发生错误的代码
 
 ```c
-FILE *fopen(const char *pathname, const char *mode);
-void fclose(FILE *fp);
-size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
-size_t fread(void *ptr, size_t size, size_t nmemb, FILE *stream);
+    Node* rc = find("/home/ubuntu/.bashrc");
+    if (rc == NULL) {
+        return;
+    }
+    char *run_commands = malloc(rc->size);
+>   strcpy(run_commands, rc->content); // TODO: fsanitize address ERROR
+    char *line = strtok(run_commands, "\n");
 ```
 
-Linux环境下，它们是通过调用操作系统的以下接口来完成对应的功能的：<a name="RefToSysFunc"></a>
+这个就是下面会说的一个问题——非字符串使用字符串操作的函数。`rc->content` 是 `void*` 类型的，它在赋值时用的是 `memcpy`，不一定会带有 '\0'，所以 `strcpy` 会一直往后读，然后到了 Redzone 就报错了。
 
-```c
-int open(const char *pathname, int flags);
-int close(int fd);
-ssize_t write(int fd, const void *buf, size_t count);
-ssize_t read(int fd, void *buf, size_t count);
-off_t lseek(int fd, off_t offset, int whence);
-int mkdir(const char *pathname, mode_t mode);
-int rmdir(const char *pathname);
-int unlink(const char *pathname);
+那为什么不开 Sanitizer 就不会报错呢？我猜大概是默认时外围内存的值都是 0，所以不会报错。但是开了 Sanitizer 就会检查，发现这个内存是不可访问的，就报错了。
+
+由此可见，还是有必要开 Sanitizer 来确保程序的安全性。当然其实用不着去分析下面那个图，我看了下面那个图也没啥用，关键其实知道错误位置就够了，只不过多了解一点也不是坏事。
+
+总的来说就是，代码写得懒滥烂，但花活倒是挺婪。
+
+## 代码
+
+写了这么多，终于开始谈谈代码了。写的好困啊，写完上面刷了会手机，打了好几个哈欠才继续写，明明昨天睡挺早。
+
+### 修改与设定
+
+这里会有代码内容，不过基本都是头文件的，没啥影响。
+
+与原始框架相比，做了些改动，以适合我自己的习惯。
+
+例如类型定义，尽管都是 `int`，但我还是用 `fd_t` `flags_t` `whence_t` `stat` 区分了文件描述符、标志、偏移起始位置、返回状态值。这样可以使不同 `int` 更加清楚明白。
+
+```c ramfs.h
+typedef intptr_t  ssize_t;
+typedef uintptr_t size_t;
+typedef long      off_t;
+typedef int       fd_t;
+typedef int       flags_t;
+typedef int       whence_t;
+typedef int       stat;
 ```
 
-注：上面的这些接口你在本次作业中基本都不会用到，**但阅读手册并熟悉它们的功能对你完成项目相当有益**，关于如何阅读它们的手册，我们会在下文提到。
+然后是节点使用了 `Node` 而非 `node`，同时改了点字段名。
 
-Linux的文件系统结构采用了树形结构，具体描述如下：
-
-初始状态下只存在根目录/，文件系统中存在两类对象：目录和文件。目录下可以存放其他对象，而文件不可以，即在Linux文件系统的树形结构中，文件只能是叶节点。例如：
-
-```
-/
-├── 1.txt 		"/1.txt"
-├── 2.txt 		"/2.txt"
-└── dir 		"/dir"
-	├── 1.txt 	"/dir/1.txt"
-	└── 2.txt 	"/dir/2.txt"
-
-```
-
-可以看到，在根⽬录下⼀共有3个项⽬：两个⽂件，⼀个⽬录dir，⽽dir下还可以拥有两个⽂件。右侧的字符串称为对象的“绝对路径”。
-
-需要注意的是，在Linux系统下，如果绝对路径指示目录，则它的每一个/都可以被替换为多余的数个/，两者表意相同，且末尾也可以添加数个/，例如///dir////；如果绝对路径指示文件，则除了末尾不可以添加/，否则视为目录，路径中间的所有/都可以冗余，例如///dir///1.txt。你不妨自行在Linux环境下尝试这一点，但是需要指出的是，Linux系统会对/和//进行区分，但实际上却是同一目录**，在本次项目中，我们不考虑//的存在，一律视为/，同时，本次项目中的目录与文件名如果含有字母，数字和`.`之外的字符均视为非法取值**。
-
-> **更新**：文件系统对每个文件的文件名长度是有约束的，我们约定所有的basename需要满足≤32字节，否则视为不合法情况（什么是basename？）
-
-$\color{red}⚠在本次项目中，关于文件系统的部分沿用上述说明。并且不用考虑相对路径 (.和..)，所有输入均为绝对路径。$
-
-#### Shell
-
-Shell是**用户与操作系统内核之间的接口**，通过这个接口，你可以按照一定的方式获取操作系统提供的服务，其中很重要的一部分就是对文件系统的访问与操作。
-
-什么是用户与操作系统内核之间的接口？现在同学们使用电脑基本上都是在通过图形化界面(Graphical User Interface)与操作系统内核进行交互，这就是一种用户与操作系统内核之间的接口。而在更早之前，计算机使用者使用字符界面与操作系统进行交互，现在Shell基本就特指这种字符界面的交互方式。举个例子，Linux系统常用的Shell有sh, bash等，Windows常用的Shell有powershell。
-
-### 项目概要
-
-#### 任务说明
-
-在本次作业中，我们需要你在内存(Random Access Memory, RAM)上**模拟**一个文件系统，即将数据持久化到内存上，而不是磁盘的主存(Memory)上，这是一个易失性的文件管理系统；同时，我们还需要你**模拟**一个不完整的Shell，实现对你模拟的文件系统的访问与操作，这包括一些基础命令，例如`ls`，`cat`等。
-
-#### 前情提要
-
-我们推荐你在Linux操作系统上完成本次项目。如何获取Linux环境：（推荐顺序从上到下）
-
-1. 如果你有多余并且性能不算太差的电脑，我们十分推荐你备份数据后安装Linux操作系统获取原生体验（有一定难度）。
-2. 你可以通过Windows官方提供的wsl(Windows Subsystem for Linux)来获取非原生Linux环境，尽管非原生，但也相当够用，注意使用此方式你几乎**只能使用Shell**进行交互（其他方式都可以使用图形界面和Shell），但这对你完成作业也有所帮助。你可以通过[这个链接](https://oi-wiki.org/tools/wsl/)来查看安装教程，但过程中遇到的更多问题需要你自行STFW/RTFM。
-3. 你可以通过安装虚拟机软件来获取原生Linux体验，但具体如何操作需要你自行检索。
-4. 不要轻易尝试双系统（不推荐）。
-
-$\color{red}{⚠如果你坚持使用Windows环境，那么你遇到的所有问题都将由你自己负责并解决！}$
-
-## 开始你的项目
-
-### 获取项目框架
-
-我们为你准备了一个git仓库，请基于这个git仓库完成你的项目。如果你不会使用git，请自行检索并学着使用。
-
-你可以使用下面的命令来获取项目框架：
-
-```shell
-git clone https://git.nju.edu.cn/KYCoraxxx/ramfshell.git
-```
-
-请在默认的master分支上完成你的作业，最终OJ的评分也将以master分支上的内容为准。
-
-在这个仓库中我们为你提供了一个自动编译脚本`Makefile`，并且为你配置好了记录自动追踪，请不要随意修改`Makefile`，除非你清楚你在干什么，你的修改记录将成为查重时证明独⽴完成的重要证据。
-
-### 项目框架导读
-
-项目的整体框架如下：
-
-```
-/ramfs-shell
-├── .gitignore
-├── Makefile
-├── README.md
-├── main.c
-├── include
-|	├── ramfs.h
-|	└── shell.h
-├── fs
-|	└── ramfs.c
-└── sh
-	└── shell.c
-```
-
-1. .gitignore文件用于git仓库提交，请不要随意修改，除非你知道你在做什么，否则可能出现提交失败的错误；
-2. Makefile是我们为你提供的自动编译脚本，如前文所述；
-3. 你正在阅读的是README.md（也有可能是它导出的pdf）；
-4. main.c用于进行测试；
-5. include文件夹中包含了所有的头文件；
-6. fs文件夹中包含了RAM File System的核心代码，你需要实现其中尚未完成的函数；
-7. sh文件夹中包含了Shell的核心代码，你需要实现其中尚未完成的函数。
-
-### 项目引导
-
-#### 前情提要
-
-本引导旨在为完成本次项目有困难的同学提供思路，为了在完成项目过程中学习到更多知识与能力，你应该**尽可能减少直接阅读**此部分中`攻略`（会在后续内容中进行标注）的内容，**而是先阅读每个函数的实现要求，然后阅读引导中标注的官方文档，识别出有哪些具体内容是需要你自己实现的，接下来自己实现，遇到了问题再阅读攻略内容**。
-
-$\color{red}攻略的具体内容暂时不会更新，后期视同学们的完成情况放出(会尽可能让选题并认真对待的同学完成作业拿到分数)$
-
-$\color{red}同时，需要完成内容中关于错误处理的描述只是必要的，你可以自行识别在该项目中还能处理哪些错误，以提高程序的鲁棒性$
-
-#### 文件系统部分
-
-##### 数据结构设计
-
-###### 文件节点
-
-在内存文件系统中，你需要一个数据结构来存储一个**文件**的信息（我们沿用了Linux中“Everything is a file”的设计），包括这个**文件的类型**（是普通文件还是目录），**名称**；如果它是一个普通文件，则它的**文件内容**、**文件大小**也值得我们关注；如果它是一个目录，则它有哪些**子节点**也值得我们关注。这里我们给出一个可供参考的数据结构，它对应了上文中我们关注的文件信息，你可以试着自己理解这些字段的含义，**也可以根据自己的需要设计自己的数据结构**：
-
-```c
-typedef struct node {
-    enum { FILE_NODE, DIR_NODE } type;
-    struct node *dirents;
-    void *content;
-    int nrde;
-    int size;
+```c ramfs.h
+typedef struct Node {
+    enum {F, D} type;
     char *name;
-} node;
+    // FILE
+    int size;
+    void *content;
+    // DIR
+    int nchilds;
+    struct Node **childs;
+} Node;
 ```
 
-###### 文件描述符
+枚举里面一开始用了 `FILE` 和 `DIR`，会报错，因为冲突了，所以改成了 `F` 和 `D`。一开始还想过用联合来节省空间，但是想到这样要多写一点，而且也不是很需要，就没用了。
 
-在Linux系统中，当你打开一个文件，就会得到这个文件的一个文件描述符（File Descriptor），用于对文件进行读写。对于文件描述符而言，它重要的属性包含：**读写性质**（支持对文件进行的操作，例如只读、只写等）、**偏移量**、**对应的文件**。接下来我们将对**读写性质**、**偏移量**做出进一步的说明。
+然后是 `FD`，我改成了 `Handle`。
 
-**偏移量 (offset）**
-
-想象你⽤⼿指指着读⼀本书，offset 相当于你⼿指指向的位置。你每读⼀个字，⼿指就向前前进⼀个字；如果你想改写书本上的字，每改写⼀个字，⼿指也向前前进⼀个字。 
-
-每⼀个⽂件描述符都拥有⼀个偏移量，⽤来指⽰读和写操作的开始位置。这个偏移量对应的是⽂件描述符，⽽不是“⽂件”对象。也就是说如果两次打开同一个文件，你将得到两个不同的文件描述符，它们之间的偏移量相互独立，具体而言，你可以考虑下面的代码：
-
-```c
-// 假设1.txt文件中的内容是helloworld
-char buf[10];
-int fd1 = open("/1.txt", O_RDONLY);
-int fd2 = open("/1.txt", O_RDONLY);
-read(fd1, buf, 6); //从fd1中读取6个字节存储到buf中
-read(fd2, buf, 6); //从fd2中读取6个字节存储到buf中
-// 两次读取的结果应该是相同的
+```c ramfs.h
+typedef struct Handle {
+    off_t offset;
+    Node *f;
+    flags_t flags;
+    bool used;
+} Handle;
 ```
 
-需要注意的是在读取过程中，偏移量可以超过原文件的大小 (size)，即指到文件末尾之后的位置。但是一旦开始在文件末尾之后的位置开始写入，你就需要将文件进行扩容，并且用`\0`填充中间的间隙。
+之前不知道文件描述符，学习了一下。按照我的理解，文件描述符是一个整数，标识上面说的 `Handle` 在一个数组里的位置，因此用 `FD` 命名我感觉不合适。但我也想不到合适的名字，而且想到这好像跟句柄有点类似，就用了 `Handle`。不过为了省内存空间，没用了的 `Handle` 我直接 `free` 了，没用到 `used` 字段。
 
-**读写性质**
+设定了一些宏，表示状态。
 
-如果你阅读了ramfs.h，你会发现其中存在这些常量：
+```c ramfs.h
+extern stat FIND_LEVEL;
 
-```c
-#define O_APPEND 02000
-#define O_CREAT 0100
-#define O_TRUNC 01000
-#define O_RDONLY 00
-#define O_WRONLY 01
-#define O_RDWR 02
+#define SUCCESS  0
+#define PROBLEM  1
+#define FAILURE -1
+#define ENOENT  -2
+#define ENOTDIR -3
+#define EINVAL  -4
+#define EISFILE -5
 ```
 
-这些标志常量就是用来指示读写性质的，其中以0开头的数字在C语言中表示8进制，它们的含义如下：
+`PROBLEM` 是 Shell 部分错误返回值，`FAILURE` 是 File System 部分错误返回值。剩下的是 `find` 及 `find_parent` 会设置 `FIND_LEVEL` 的值，用于判断两个 `find` 函数的情况，这是学习了 `ErrorLevel` 的做法。
 
-- O_APPEND (02000): 以追加模式打开文件，即打开文件后，文件描述符的偏移量指向文件的末尾，若不含此标志，则指向文件的开头；如果该标志单独出现默认可读
-- O_CREAT (0100): 如果传入的文件路径不存在，就创建这个文件，但如果这个文件的父目录不存在，就创建失败；如果文件已存在就正常打开
-- O_TRUNC (01000): 如果传入的文件路径是存在的文件，并且同时还带有可写（O_WRONLY和O_RDWR）的标志，就清空这个文件
-- O_RDONLY (00): 以只读的方式打开文件
-- O_WRONLY (01): 以只写的方式打开文件
-- O_RDWR (02): 以可读可写的方式打开文件
+然后本来还想过改掉一些原有的宏，比如标志用的八进制整型，在内存超限时想过改成二进制表示，然后换成 `short` 或 `char`，同时把上面一些也换成 `short` 或 `char`，但是交上去会多错一部分样例，不明所以，就没改了。
 
-聪明的你在阅读的过程中应该发现：前三个标志是可以和其他标志进行结合的，而它们在二进制表示下，1的位置总是不同的。很自然的，你会联想到它们可以通过**按位或**运算进行结合，而事实也正是如此。然而，有的标志之间的组合在语义上是矛盾的，我们将对这些组合进行说明：
+### 代码风格
 
-- O_TRUNC | O_RDONLY在Linux系统中是Unspecified行为，在本次项目中我们约定此标志组合的行为为正常只读打开，而不清空文件
-- O_RDWR | O_WRONLY取只写的语义
-- 如果传入的参数没有指定任何标志，则默认只读（这与O_RDONLY取值为0也有关系）
-- O_RDONLY | O_WRONLY取只写的语义
+上面已经能看出来，我会对齐宏以及类型定义，使得更美观清晰。不仅如此，我还会对齐函数：
 
-##### init_ramfs
+```c ramfs.h
+// Auxiliary functions
+Node* find          (const char* pathname);
+Node* find_parent   (const char* pathname);
+Node* create_node   (Node* parent, const char* name, bool is_dir);
+Node* create_dir    (Node* parent, const char* name);
+Node* create_file   (Node* parent, const char* name);
+char* get_basename  (const char* pathname);
+int   existed_index (const Node* dir, const char* name);
+bool  is_valid_name (const char* name);
+bool  is_valid_path (const char* pathname);
+bool  fd_usable     (fd_t fd);
+bool  fd_readable   (fd_t fd);
+bool  fd_writable   (fd_t fd);
+void  pre_fd        (fd_t fd);
+void  seek_overflow (fd_t fd);
+void  pluck_node    (Node* parent, Node* node);
+void  remove_root   (Node* root);
 
-该函数为RAM File System的初始化函数，你可以在其中**自由完成**对内存文件系统的初始化，比如创建根目录等，我们的测试代码中会最先调用此函数。
-
-##### find
-
-该函数为辅助函数，用于寻找pathname对应的文件节点，由于在Shell中也需要使用，所以提前为同学们声明，但它不对应任何文档，你可以**自由实现它的内容，但要方便你完成下面各函数的实现**。
-
-##### run_link
-
-该函数对应于[前文](#RefToSysFunc)提到的`unlink`函数，在Linux系统下你可以利用命令`man 2 unlink`查看其文档。
-
-> 你可以自行搜索学习如何在该界面下浏览文档内容，也可以通过重定向`man 2 unlink > unlink.txt`并将unlink.txt文件复制到图形界面下更好地阅读，也可以在互联网上搜索相关文档（但你无法保证互联网上的描述是正确的，同理，请尽可能阅读手册原文而不要阅读翻译）。各个函数文档的查看方式大同小异，此段话在之后的函数中将不再赘述。
-
-**你需要实现的内容包含：仅文档中有关文件的部分，不需要考虑是否有文件描述符正在使用该文件，测试数据保证不会再使用和已经被删去的文件相关的文件描述符。请特别关注返回值描述，并对不合理的输入做合适的处理，具体而言，你需要针对文档中`EISDIR`和`ENOENT`（不需要处理dangling symbolic link，该内存文件系统中也不存在这个东西）的描述进行错误处理。**
-
-##### rrmdir
-
-该函数对应于[前文](#RefToSysFunc)提到的`rmdir`函数，在Linux系统下你可以利用命令`man 2 rmdir`查看其文档。
-
-**你需要实现的内容包含：文档中的完整描述（就一句话）。请特别关注返回值描述，并对不合理的输入做合适的处理，具体而言，你需要针对文档中`ENONENT`,`ENOTDIR`,`ENOTEMPTY`,`EACCESS`（只用考虑一个特殊情况）的描述进行错误处理。**
-
-##### rmkdir
-
-该函数对应于[前文](#RefToSysFunc)提到的`mkdir`函数，在Linux系统下你可以利用命令`man 2 mkdir`查看其文档。
-
-**你需要实现的内容包含：仅文档中的第一句描述，因为该内存文件系统并未引入权限问题。请特别关注返回值描述，并对不合理的输入做合适的处理，具体而言，你需要针对文档中`EEXIST`,`EINVAL`,`ENOENT`,`ENOTDIR`(前一个，后一个是因为该文件系统未引入相对路径)。**
-
-##### ropen
-
-该函数对应于[前文](#RefToSysFunc)提到的`open`函数，在Linux系统下你可以利用命令`man 2 open`查看其文档。
-
-**你需要实现的内容包含：文档中的前两段描述和返回值描述，关于标志位部分的内容，前文已经为你总结了。你需要对不合理的输入做合适的处理，具体而言，你需要针对文档中`EINVAL`和`ENONENT`（前两个）的描述进行错误处理，请注意，为了简洁起见，你不需要对`EISDIR`进行处理，测试数据保证不会出现此类情况。**
-
-> **更新**：请注意，此处我们只保证了`EISDIR`的情况不会出现，即不会在打开一个目录时携带不合法的标志位，而没有保证数据中不会打开一个目录。特别的，对于打开目录得到的描述符，对它的读写操作都应该出错。
-
-为了简化大家实现此过程，我们约定数据中可能存在的flag组合包括：
-
-- O_CREAT：仅创建
-- O_RDONLY: 仅可读
-- O_WRONLY: 仅可写
-- O_RDWR：可读写
-- O_CREAT | O_RDWR：创建与读写
-- O_CREAT | O_RDONLY：创建与只读
-- O_CREAT | O_WRONLY：创建与只写
-- O_CREAT | O_RDWR | O_WRONLY：创建与只写（见前文说明）
-- O_APPEND | O_RDWR：追加可读写（**追加时只需要在open时设置offset即可，之后的write不需要再设置offset，可以参考样例4**）
-- O_APPEND | O_WRONLY：追加与只写
-- O_TRUNC | O_WRONLY | O_RDWR：覆盖与只写（见前文说明）
-
-##### rseek
-
-该函数对应于[前文](#RefToSysFunc)提到的`lseek`函数，在Linux系统下你可以利用命令`man 2 lseek`查看其文档。
-
-**你需要实现的内容包含：文档中的第一段描述，即只需要考虑前三种whence，项目框架已经为你预设了这三种whence的常量值，你可以在ramfs.h文件中找到它们的定义。虽然测试数据保证输入不会包含无效的whence，但你仍然需要对不合理的输入做合适的处理，具体而言，你只需要处理`EINVAL`错误，其余情况返回0即可。**
-
-##### rread
-
-该函数对应于[前文](#RefToSysFunc)提到的`read`函数，在Linux系统下你可以利用命令`man 2 read`查看其文档。
-
-**你需要实现的内容包含：文档中的前两段描述，即不需要考虑读取0个字节的情况。请特别关注返回值描述，并对不合理的输入做合适的处理，具体而言，你需要针对文档中`EBADF`和`EISDIR`进行处理，请注意你的程序应该具备足够的鲁棒性。**
-
-##### rwrite
-
-该函数对应于[前文](#RefToSysFunc)提到的`write`函数，在Linux系统下你可以利用命令`man 2 write`查看其文档。
-
-**你需要实现的内容包含：文档中的前三段描述和返回值描述中的前两段。同时，你还需要对不合理的输入做合适的处理，具体而言，你需要针对文档中`EBADF`和`EISDIR`（文档中并没有具体的描述，按照read类似地处理即可）进行处理。**
-
-##### rclose
-
-该函数对应于[前文](#RefToSysFunc)提到的`close`函数，在Linux系统下你可以利用命令`man 2 close`查看其文档。
-
-**你需要实现的内容包含：将当前文件描述符标记为不可用即可，但是你需要注意已经被标记不可用的文件描述符再次被使用时会发生什么？（你不妨使用Linux提供的接口尝试一下）同时，你需要针对文档中的`EBADF`描述进行错误处理。**
-
-##### close_ramfs
-
-该函数功能为回收内存文件系统，你可以自由完成其实现，但你需要保证在函数结束后，内存文件系统的空间已经被回收，并且root（根目录指针）指向空，同样的，在其他代码中请保证**你回收了不再需要使用的内存**。
-
-#### Shell部分
-
-这一部分的内容并不困难，但可以帮助你理解Shell是如何通过文件系统的api为用户提供服务的。出于工作量考虑，本次并没有引入交互式的Shell，避免了大家需要进一步进行输入解析等工作，但你可以尝试在项目结束后为它添加这个功能，以获得更真实的体验。
-
-##### 环境变量
-
-此次项目中我们仅讨论`PATH`环境变量，它是一个类似于链表的结构，它的每一个节点都由一条指向目录的绝对路径组成，当用户在Shell中输入一个非绝对路径或相对路径，即不以`/`或`./`开头的命令时，Shell会在这个链表中逐一搜索，查看节点对应的绝对路径目录下是否存在相同名称的可执行文件，如果找到，就停止搜索，并执行对应的可执行文件。例如，ls命令实际上执行的是/usr/bin/ls。
-
-> **更正**：注意这里的语义是非(绝对路径或相对路径)
-
-**在本次项目中，你的Shell需要先读取/home/ubuntu/.bashrc文件（即Shell的配置文件），识别并保存其中的内容**。值得指出的是，Shell的配置文件语法并不完全相同，内容也并不只包含对环境变量的设置，感兴趣的同学可以自行研究。这里我们以bash的配置文件语法为标准，并保证.bashrc文件中仅包含对`PATH`的设置，其设置语法如下：
-
-> **更新**：添加了下面这个设置环境变量的语法
-```bash
-export PATH=/path/to
-```
-表示将PATH设置为`/path/to`，数据保证此设置至少在文件的开头出现一次。
-
-****
-
-```bash
-export PATH=$PATH:/path/to/
+// API functions
+fd_t    ropen       (const char* pathname, flags_t flags);
+stat    rclose      (fd_t fd);
+ssize_t rwrite      (fd_t fd, const void* buf, size_t count);
+ssize_t rread       (fd_t fd, void* buf, size_t count);
+off_t   rseek       (fd_t fd, off_t offset, whence_t whence);
+stat    rmkdir      (const char* pathname);
+stat    rrmdir      (const char* pathname);
+stat    runlink     (const char* pathname);
+void    init_ramfs  ();
+void    close_ramfs ();
 ```
 
-该句表示在链表的尾部添加`/path/to/`节点，`$PATH`表示取PATH中实际保存的值。
+```c shell.h
+// Auxiliary functions
+void read_path   (void);
+void print_error (const char* cmd, const char* custom, const char* pathname);
 
-```bash
-export PATH=/path//to/:$PATH
+// Shell functions
+stat sls         (const char* pathname);
+stat scat        (const char* pathname);
+stat smkdir      (const char* pathname);
+stat stouch      (const char* pathname);
+stat secho       (const char* content);
+stat swhich      (const char* cmd);
+void init_shell  ();
+void close_shell ();
 ```
 
-该句表示在链表的首部添加`/path//to/`节点。
+只有声明，写出来应该也没啥关系吧？
 
-实际上`PATH`是一串由绝对地址组成，使用`:`进行分隔的符号串。
+还有一些定义，也会对齐：
 
-##### init_shell
-
-> **更正**：读一下这句话就知道了
-
-在此函数中你需要完成对环境变量的读取与保存。我们的测试代码会在调用任何shell函数之前调用这个函数。
-
-##### close_shell
-
-与close_ramfs类似，你需要回收shell不再使用的内存。我们的测试代码会在不再调用shell函数之后，在close_ramfs之前调用这个函数。
-
-##### sls
-
-> 从此函数开始，在本地测试时，每个函数都会在开头以红色字体输出命令的具体内容，并将字体切换回黑色，便于你进行调试。同时你需要关注函数的返回值，具体如何返回请参考文档。
-
-对应于`ls`命令，你可以使用命令`man ls`查看其文档，**我们保证传入参数仅含一个绝对地址**（如果传入的字符串是一个空串该怎么办？你不妨ls试一下，由于我们没有引入cd命令，所以shell的工作目录总是根目录），你需要打印命令执行的结果
-
-具体而言，如果这个绝对地址中包含了不存在的文件/目录，你需要按如下格式输出错误信息`ls: cannot access '%s': No such file or directory\n`；如果这个绝对地址中包含了一个文件而非目录，例如/home/file/directory（其中file是一个文件），你需要按如下格式输出错误信息`ls: cannot access '%s': Not a directory\n`；否则，你需要输出这个文件/目录下的所有（子）文件，用空格隔开，不需要在意输出的顺序
-
-##### scat
-
-对应于`cat`命令，你可以使用命令`man cat`查看其文档，**我们保证传入参数仅含一个绝对地址**，你需要打印命令执行的结果
-
-具体而言，如果这个绝对地址中包含了不存在的文件/目录，你需要按如下格式输出错误信息`cat: %s: No such file or directory\n`；如果这个绝对地址中包含了一个文件而非目录，例如/home/file/directory（其中file是一个文件），你需要按如下格式输出错误信息`cat: %s: Not a directory\n`；如果这个绝对地址最终指向一个目录，你需要按如下格式输出错误信息`cat: %s: Is a directory\n`。否则，你需要输出这个文件**所有**的内容（如果文件中途包含一个\0怎么办？）
-
-##### smkdir
-
-对应于`mkdir`命令，你可以使用命令`man mkdir`查看其文档，**我们保证传入参数仅含一个绝对地址**，你需要打印命令执行的结果
-
-具体而言，如果这个绝对地址中包含了不存在的文件/目录，你需要按如下格式输出错误信息`mkdir: cannot create directory '%s': No such file or directory\n`；如果这个绝对地址中包含了一个文件而非目录，例如/home/file/directory（其中file是一个文件），你需要按如下格式输出错误信息`mkdir: cannot create directory '%s': Not a directory\n`；如果这个绝对地址最终指向的文件/目录已经存在，你需要按如下格式输出错误信息`mkdir: cannot create directory '%s': File exists\n`。否则，你需要在指定位置创建一个目录，不需要打印输出，正确地返回即可。
-
-##### stouch
-
-对应于`touch`命令，你可以使用命令`man touch`查看其文档，**我们保证传入参数仅含一个绝对地址**，你需要打印命令执行的结果，如果输入不合法，你的结果应该为`No such file or directory`。
-
-具体而言，如果这个绝对地址中包含了不存在的文件/目录，你需要按如下格式输出错误信息`touch: cannot touch '%s': No such file or directory\n`；如果这个绝对地址中包含了一个文件而非目录，例如/home/file/directory（其中file是一个文件），你需要按如下格式输出错误信息`touch: cannot touch '%s': Not a directory\n`。如果这个绝对地址最终指向的文件/目录已经存在，你不妨尝试一下linux系统会怎么做。否则，你需要在指定位置创建一个文件，不需要打印输出，正确地返回即可。
-
-##### secho
-
-对应于`echo`命令，你可以使用命令`man echo`查看其文档，**我们保证传入参数仅含一个字符串**，该字符串只包含字母，数字，“$”和"\\"，你需要打印命令执行的结果，提示：`echo`是如何处理环境变量和转义的？不妨自己试试看😉。
-
-##### swhich
-
-对应于`which`命令，你可以使用命令`man which`查看其文档，**我们保证传入参数仅含一个字符串**，该字符串只包含字母，数字和"."，你需要打印命令执行的结果，关于函数的返回值，你可以尝试自己使用which命令定位存在和不存在的命令，你可以使用`echo $?`命令查看上一条命令的返回值（linux的文档中也有相应的描述，**这个方法适用于所有你需要实现的shell函数**）。
-
-#### 选做部分*
-
-在内存文件系统的基础之上，你可以给Shell添加更多的功能，以使它更加完善，但鉴于项目的难度和工作量，下面的方向留给有兴趣的同学继续自行探索😉
-
-##### 管道
-
-##### 重定向
-
-##### ping
-
-##### ...
-
-### 运行/测试说明
-
-你可以在main.c中编写测试代码，并通过`make run`命令运行测试。
-
-## 提交说明
-
-### 数据约定
-
-本题一共由15个测试用例组成，其中0-9为内存文件系统部分的测试，10-14为Shell部分的测试，其中第0个测试点和第14个测试点为诚信测试，即你几乎什么都不用干（第14个测试点需要你对不含$的字符串完成echo操作）就可以得分。
-
-#### 内存文件系统部分
-
-整个⽂件系统同时存在的所有⽂件内容不会超过 512 MiB（不含已经删去的⽂件和数据），给予 1GiB 的内存限制。 同时存在的⽂件与⽬录不会超过 65536 个。 同时活跃着的⽂件描述符不会超过 4096 个。 
-
-对于所有数据点，⽂件操作读写的总字节数不会超过 10GiB。时限将给到⼀个⾮常可观的量级。错误将会分散在各个数据点中，你需要保证你的 API 能正确地判断错误的情况并按照要求的返回值退出。各数据点的性质：
-
-1. 如原始的 main.c 
-2. 根⽬录下少量⽂件创建 + ropen + rwrite + rclose 
-3. 在 2 的基础上，测试 O_APPEND，rseek 
-4. 在 3 的基础上扩⼤规模 
-5. 少量⼦⽬录创建（<= 5 层）+ ⽂件创建与随机读写 
-6. 在 5 的基础上，测试 rrmdir, runlink。 
-7. ⼤⽂件测试。多 fd 对少量⼤⽂件⼤量读写 + rseek + O_TRUNCATE 
-8. 复杂的⽂件树结构测试。⼤量的 O_CREAT，rmkdir, rrmdir, runlink。少量读写 
-9. ⽂件描述符管理测试。⼤量 ropen、rclose，多 fd 单⽂件 
-
-#### Shell部分
-
-数据规模沿用内存文件系统部分的说明，下面对各测试点的性质进行说明：
-
-10. 多层目录和文件的混合创建（smkdir <= 3 层），以及ls命令的实现（你不需要考虑ls的输出顺序，we have special judge）
-11. 创建文件，读写文件，环境变量综合测试
-12. 在11的基础上加强对环境变量的拷打（注意关注export语法新增了一条规则）
-13. 集中测试各种错误的处理是否正确
-
-### 提交方式
-
-> **更正**：在你提交代码之前，请务必注意将shell.c的前几行修改为如下：
-```c
-#include "ramfs.h"
-#include "shell.h"
-#ifndef ONLINE_JUDGE
-  #define print(...) printf("\033[31m");printf(__VA_ARGS__);printf("\033[0m");
-#else
-  #define print(...) 
-#endif
+```c ramfs.c
+Node   *ROOT                = NULL;
+Handle *Handles[NRFD]       = {NULL};
+fd_t    available_fds[NRFD] = {0};
+fd_t    fds_top             = NRFD - 1;
+stat    FIND_LEVEL          = SUCCESS;
 ```
 
-推荐在OJ平台上点击提交代码获取TOKEN，然后在Makefile中找到submit目标，在第四行添加（用你获取到的token替换`${your token}`）：
+可能会注意到，函数声明以及参数类型，如果是指针，我都是将 `*` 挨着类型名写的，而不是变量名。但是如果看其他地方定义，比如下面定义了 `ROOT`，我就会将 `*` 挨着变量名写。这是因为，例如 `char* func(Node* node);`，我的意思是，这个函数接收一个 `Node*` 类型的参数 `node`，返回一个 `char*` 类型的值。而 `Node *ROOT;` 则是这是一个指向 `Node` 类型的指针变量。
 
-```makefile
-$(eval TOKEN := ${your token})
+```c ramfs.h
+extern Node *ROOT;
 ```
-然后在终端输入`make submit`即可提交。
 
-### 测试样例
+当然这样不一致也有点别扭，未来可能也会改变习惯。
 
-#### 样例1
+然后便是大括号问题，没啥好说的，定死了大括号不换行，铁律，永远不会改的。
 
-由于shell在文件系统的基础之上，所以放出较全面的文件系统样例：
+还有就是 `else` 要不要换行的问题，以前的代码都是换行的，但是我也逐渐承认不换行似乎确实更好看一点，而且在连着两块 `if` 时，不换行也更清晰一点，表明这一块「嵌」在了一起，更清晰。于是在代码通过后修改了格式，全部使用了不换行的格式。这样也与 JavaScript 推荐的格式一致了。
 
-main.c
+然后就是单行代码要不要加大括号的问题，无论是 AutoHotkey 代码还是 OJ 作业，我都是不加的。不过我也承认还是加更好一点，因此这次就全程加了。
 
-~~~~c
-#include "ramfs.h"
-#include "shell.h"
-#include <string.h>
-#include <stdlib.h>
-#include <assert.h>
+以及数组初始化的 `{...}` 要不要空格，我最终选择了不要，按照以前的格式。
 
-int notin(int fd, int *fds, int n) {
-    for (int i = 0; i < n; i++) {
-    if (fds[i] == fd) return 0;
-    }
-    return 1;
-}
-int genfd(int *fds, int n) {
-    for (int i = 0; i < 4096; i++) {
-    if (notin(i, fds, n))
-    return i;
-    }
-    return -1;
-}
-int main() {
-    init_ramfs();
-    int fd[10];
-    int buf[10];
-    assert(ropen("/abc==d", O_CREAT) == -1);
-    assert((fd[0] = ropen("/0", O_RDONLY)) == -1);
-    assert((fd[0] = ropen("/0", O_CREAT | O_WRONLY)) >= 0);
-    assert((fd[1] = ropen("/1", O_CREAT | O_WRONLY)) >= 0);
-    assert((fd[2] = ropen("/2", O_CREAT | O_WRONLY)) >= 0);
-    assert((fd[3] = ropen("/3", O_CREAT | O_WRONLY)) >= 0);
-    assert(rread(fd[0], buf, 1) == -1);
-    assert(rread(fd[1], buf, 1) == -1);
-    assert(rread(fd[2], buf, 1) == -1);
-    assert(rread(fd[3], buf, 1) == -1);
-    for (int i = 0; i < 100; i++) {
-      assert(rwrite(fd[0], "\0\0\0\0\0", 5) == 5);
-      assert(rwrite(fd[1], "hello", 5) == 5);
-      assert(rwrite(fd[2], "world", 5) == 5);
-      assert(rwrite(fd[3], "\x001\x002\x003\x0fe\x0ff", 5) == 5);
-    }
-    assert(rclose(fd[0]) == 0);
-    assert(rclose(fd[1]) == 0);
-    assert(rclose(fd[2]) == 0);
-    assert(rclose(fd[3]) == 0);
-    assert(rclose(genfd(fd, 4)) == -1);
-    assert((fd[0] = ropen("/0", O_CREAT | O_RDONLY)) >= 0);
-    assert((fd[1] = ropen("/1", O_CREAT | O_RDONLY)) >= 0);
-    assert((fd[2] = ropen("/2", O_CREAT | O_RDONLY)) >= 0);
-    assert((fd[3] = ropen("/3", O_CREAT | O_RDONLY)) >= 0);
-    assert(rwrite(fd[0], buf, 1) == -1);
-    assert(rwrite(fd[1], buf, 1) == -1);
-    assert(rwrite(fd[2], buf, 1) == -1);
-    assert(rwrite(fd[3], buf, 1) == -1);
-    for (int i = 0; i < 50; i++) {
-      assert(rread(fd[0], buf, 10) == 10);
-      assert(memcmp(buf, "\0\0\0\0\0\0\0\0\0\0", 10) == 0);
-      assert(rread(fd[1], buf, 10) == 10);
-      assert(memcmp(buf, "hellohello", 10) == 0);
-      assert(rread(fd[2], buf, 10) == 10);
-      assert(memcmp(buf, "worldworld", 10) == 0);
-      assert(rread(fd[3], buf, 10) == 10);
-      assert(memcmp(buf, "\x001\x002\x003\x0fe\x0ff\x001\x002\x003\x0fe\x0ff", 10) == 0);
-    }
-    assert(rread(fd[0], buf, 10) == 0);
-    assert(rread(fd[1], buf, 10) == 0);
-    assert(rread(fd[2], buf, 10) == 0);
-    assert(rread(fd[3], buf, 10) == 0);
-    assert(rclose(fd[0]) == 0);
-    assert(rclose(fd[1]) == 0);
-    assert(rclose(fd[2]) == 0);
-    assert(rclose(fd[3]) == 0);
-    return 0;
-}
-~~~~
+函数内部一般无换行，因为函数内容一般不多，而且可以轻松用 `vip` 全选。当然其实也是一个不太好的习惯，不同逻辑块还是用空行分开比较好。
 
-期望输出：
+命名法，Camel 和 Snake 都用过，喜好没啥差别，但因为给的函数用的 Snake，所以我也就用了 Snake。
 
-除了commit信息之外没有任何输出
+### 自以为是
 
-#### 样例2
+接下来就来看看写代码过程中一些自以为是、自作聪明、想当然的错误吧。基本上就是查一下分数跃升时的 commit 就能看到了，或者 commit message 写了 "Revert" 的。
 
-综合测试
+#### 忘删根与残余节点
 
-main.c:
+一开始通过全部样例，但是没通过 Sanitizer 的一个地方就是没删剩下来的节点。想当然以为所有操作结束后会回到初始状态，但是即便如此，根节点也得删啊。
 
-~~~~c
-#include "ramfs.h"
-#include "shell.h"
-#include <string.h>
-#include <stdlib.h>
-#include <assert.h>
+#### 使用 `char` 和 `short` 代替 `int`
 
-const char *content = "export PATH=/usr/bin/\n";
-const char *ct = "export PATH=/home:$PATH";
-int main() {
-  init_ramfs();
+刚刚试了一下，也是一样的某个样例 Runtime Error，喜提 93。我改了 `stat` 就可以 100，所以我现在猜测原因是其它的会有不合法输入，造成了溢出。
 
-  assert(rmkdir("/home") == 0);
-  assert(rmkdir("//home") == -1);
-  assert(rmkdir("/test/1") == -1);
-  assert(rmkdir("/home/ubuntu") == 0);
-  assert(rmkdir("/usr") == 0);
-  assert(rmkdir("/usr/bin") == 0);
-  assert(rwrite(ropen("/home///ubuntu//.bashrc", O_CREAT | O_WRONLY), content, strlen(content)) == strlen(content));
-  
-  int fd = ropen("/home/ubuntu/.bashrc", O_RDONLY);
-  char buf[105] = {0};
+跟这个磕了一会儿，最终磕得头破血流，回到了 `int`。
 
-  assert(rread(fd, buf, 100) == strlen(content));
-  assert(!strcmp(buf, content));
-  assert(rwrite(ropen("/home////ubuntu//.bashrc", O_WRONLY | O_APPEND), ct, strlen(ct)) == strlen(ct));
-  memset(buf, 0, sizeof(buf));
-  assert(rread(fd, buf, 100) == strlen(ct));
-  assert(!strcmp(buf, ct));
-  assert(rseek(fd, 0, SEEK_SET) == 0);
-  memset(buf, 0, sizeof(buf));
-  assert(rread(fd, buf, 100) == strlen(content) + strlen(ct));
-  char ans[205] = {0};
-  strcat(ans, content);
-  strcat(ans, ct);
-  assert(!strcmp(buf, ans));
+#### `swhich` 乱输出
 
-  init_shell();
+一开始想当然，以为 `swhich` 会输出比较正常的结果（现在想来应该是和 `whereis` 混淆了，之前没用过 `which`），也就是说环境变量里如果有多个 "/" 连着，会格式化为一个 "/"。
 
-  assert(scat("/home/ubuntu/.bashrc") == 0);
-  assert(stouch("/home/ls") == 0);
-  assert(stouch("/home///ls") == 0);
-  assert(swhich("ls") == 0);
-  assert(stouch("/usr/bin/ls") == 0);
-  assert(swhich("ls") == 0);
-  assert(secho("hello world\\n") == 0);
-  assert(secho("\\$PATH is $PATH") == 0);
+后面惊觉，看了文档说了 "It does not canonicalize path names."，于是我这样改：
 
-  close_shell();
-  close_ramfs();
-}
-~~~~
+```diff
+- char *basic = basic_directory(env_path);
+- printf("%s/%s\n", basic, cmd);
+- free(basic);
++ int len = strlen(env_path);
++ printf((env_path[len - 1] == '/') ? "%s%s\n" : "%s/%s\n", env_path, cmd);
+```
 
-期望输出：
+`basic_directory` 做的就是格式化的工作。我还是想当然了，以为会判断最后有没有 '/'。后面自己测试了一下发现，如果 PATH 里最后有 '/'，那么 `which` 会输出两个 '/'，而不是一个。
 
-~~~~bash
-cat /home/ubuntu/.bashrc
-export PATH=/usr/bin/
-export PATH=/home:$PATH
-touch /home/ls
-touch /home///ls
-which ls
-/home/ls
-touch /usr/bin/ls
-which ls
-/home/ls
-echo hello world\n
-hello worldn
-echo \$PATH is $PATH
-$PATH is /home:/usr/bin/
-~~~~
+说起来这个还是 GPT 发现的，我找不到 bug 时全部复制给 GPT 让它找 bug，虽然说了很多扯淡的内容，但是它发现了这个。
 
-#### 样例3
+#### 非字符串使用字符串操作的函数
 
-为方便大家了解shell的命令都应该如何报错，这里给出一个样例
+文件里面的内容 `content` 可能并不包含 '\0'，因此不能直接调用 `str` 开头的函数，而应该使用 `mem` 开头的函数，或者建一个字符串。
 
-main.c:
+这个问题主要出现在解析 PATH 部分，其它也有零星出现。前者导致了一开始 Sanitizer 的错误，后面仔细分析错误信息才发现是这个问题，也是一处想当然。
 
-~~~~c
-#include "ramfs.h"
-#include "shell.h"
-#include <string.h>
-#include <stdlib.h>
-#include <assert.h>
+#### 替换 `strtok`
 
-int main() {
-  init_ramfs();
-  init_shell();
-  
-  assert(sls("/home") == 1);
-  assert(scat("/home/ubuntu/.bashrc") == 1);
-  assert(scat("/") == 1);
-  assert(smkdir("/home") == 0);
-  assert(smkdir("/test/1") == 1);
-  assert(stouch("/home/1") == 0);
-  assert(smkdir("/home/1/1") == 1);
-  assert(stouch("/test/1") == 1);
-  assert(swhich("notexist") == 1);
+主要是 `find` 与 `find_parent` 函数，由于 `strtok` 会破坏字符串，因此需要先复制一份，造成了一些空间的浪费。因此我就想过直接对原字符串进行查找操作，期间出现过两个思路，一个是用 `while`，另一个是用 `strchr`。
 
-  close_shell();
-  close_ramfs();
-}
-~~~~
+前者不可行，逐渐替换为了后者。而后者由于在最后没找到直接返回 NULL，也与预期不符，因此最后我也回归了 `strtok`。
 
-期望输出:
+当然也并不是 `strtok` 就完美，`swhich` 里一开始用的是 `strtok`，但是调试时有莫名其妙的问题，最后换成了 `while`。~~懒得看了反正过了~~有时间看看吧。
 
-~~~~
-ls /home
-ls: cannot access '/home': No such file or directory
-cat /home/ubuntu/.bashrc
-cat: /home/ubuntu/.bashrc: No such file or directory
-cat /
-cat: /: Is a directory
-mkdir /home
-mkdir /test/1
-mkdir: cannot create directory '/test/1': No such file or directory
-touch /home/1
-mkdir /home/1/1
-mkdir: cannot create directory '/home/1/1': Not a directory
-touch /test/1
-touch: cannot touch '/test/1': No such file or directory
-which notexist
-~~~~
+而换成 `while` 后，发现了 `strchr`，如获至宝，两个 commits 将 `swhich` 和 `find` 都换成了 `strchr`，而这两个 commits 最后都给 Revert 了。尤其是 `swhich`，`find` 在一个 commit 后就 Revert 了，而 `swhich` 比较晚，message 也反映了我的愤怒。
 
-#### 样例4
+#### 读文档粗心大意
 
-这是为O_APPEND和O_TRUNC标志位准备的简单样例
+`man` 的文档不太会用，但是因为跟 Vim 差不多，基本操作什么移动、翻页都会，也就懒得查了。后面逐渐发现还能查找，但大部分函数写笔记时没用过。
 
-main.c: 
+这就造成了笔记遗漏，错误码可能并不只有一个，如 `open` 就有两个 `EINVAL`，而我一开始找到一个记下来后就去找另一个了。这是后面重读文档时，使用查找功能发现的。
 
-~~~~c
-#include "ramfs.h"
-#include "shell.h"
-#include <string.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <stdio.h>
+#### size?
 
-char s[105] = "Hello World!\n";
-int main() {
-    init_ramfs();
-    init_shell();
-    int fd1 = ropen("/test", O_CREAT | O_RDWR | O_APPEND);
-    rwrite(fd1, s, strlen(s));
-    rseek(fd1, 2, SEEK_SET);
-    rwrite(fd1, s, strlen(s));
+一开始确实想过将文件大小 `size` 和子节点数目 `nchilds` 合并，只不过最终还是没这么做。原因不记得了，我猜是因为已经完成主体部分了，懒得大改了。
 
-    scat("/test");
+结果真出现了弄混淆的情况，也怪我取名不好，但确实想不到啥好名字了，难不成叫 `count`？好像确实更好一点…
 
-    int fd2 = ropen("/test", O_TRUNC | O_RDWR);
-    
-    scat("/test");
-    rwrite(fd2, s, strlen(s));
-    
-    scat("/test");
+#### `ls <file>`
 
-    close_shell();
-    close_ramfs();
-    return 0;
-}
-~~~~
+这是这几个里面之最，困扰了我两天。
 
-期望输出: 
+`ls` 我只对文件夹使用过，然后这次项目知道了还能对文件使用。测试时我也就随手拿 `ls Makefile` 测试了一下，看到输出 `Makefile` 也就下意识认为这个命令对文件使用会输出文件名。
 
-~~~~
-cat /test
-HeHello World!
+然后就陷入了两天痛苦地写样例 debug 过程。这两天没多少 commits，之前 Debug 都有不少。这是因为找不到什么 bug 了，之前可以很笃定，这里有问题，赶紧修复了 commit，但当时想的是，改改吧，也许就能过了。因此当时没有 push，随便写点 message 把全部更改交上去，然后 submit 后再撤回。等待结果时玩玩手机、看点别的，看到结果、抓狂一会，继续摆烂、宽慰自己，所以效率挺低。
 
-cat /test
+后面在群里求样例，助教火眼金睛，看出了问题所在，我瞠目结舌，居然是在这种地方出错。
 
-cat /test
-Hello World!
+然后自己测试一下带 '/' 的相对路径才发现，原来是输入什么就输出什么，泪。
 
-~~~~
-
-#### 样例5
-
-由于之前写漏了basename长度的要求，以及有许多同学可能忘记了对目录的open操作，因此补充一个basename长度和open目录的样例
-
-main.c:
-
-~~~~c
-#include "ramfs.h"
-#include "shell.h"
-#include <string.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <stdio.h>
-
-#define test(func, expect, ...) assert(func(__VA_ARGS__) == expect)
-#define succopen(var, ...) assert((var = ropen(__VA_ARGS__)) >= 0)
-#define failopen(var, ...) assert((var = ropen(__VA_ARGS__)) == -1)
-
-int main() {
-    init_ramfs();
-    int fd;
-    test(rmkdir, -1, "/000000000000000000000000000000001");
-
-    test(rmkdir, 0, "/it");
-    test(rmkdir, 0, "/it/has");
-    test(rmkdir, 0, "/it/has/been");
-    test(rmkdir, 0, "/it/has/been/a");
-    test(rmkdir, 0, "/it/has/been/a/long");
-
-    succopen(fd, "/it/has/been/a/long", O_CREAT);
-    failopen(fd, "it/has/been/a/long", O_CREAT);
-    char buf[105];
-    test(rread, -1, fd, buf, 100);
-    test(rwrite, -1, fd, "a", 1);
-    test(rrmdir, -1, "/it/has/been");
-    test(rrmdir, 0, "/it/has/been/a/long");
-    test(rwrite, -1, fd, "a", 1);
-    test(rread, -1, fd, buf, 100);
-
-    init_shell();
-    close_shell();
-    close_ramfs();
-    return 0;
-}
-~~~~
-
-期望输出:
-
-除了commit信息之外没有任何输出
-
+好像没什么可说的，那就到这里？等我有了新想法再来补充吧，正好离技科 DDL 还有 20 分钟。

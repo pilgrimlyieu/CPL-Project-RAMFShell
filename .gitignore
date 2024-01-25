@@ -10,6 +10,7 @@
 !include/shell.h
 !main.c
 !README.md
+!README.origin.md
 !README.pdf
 !.vscode
 !.vscode/c_cpp_properties.json
