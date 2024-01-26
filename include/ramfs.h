@@ -63,6 +63,7 @@ int   existed_index (const Node* dir, const char* name);
 bool  is_valid_name (const char* name);
 bool  is_valid_path (const char* pathname);
 bool  fd_usable     (fd_t fd);
+bool  fd_isfile     (fd_t fd);
 bool  fd_readable   (fd_t fd);
 bool  fd_writable   (fd_t fd);
 void  pre_fd        (fd_t fd);

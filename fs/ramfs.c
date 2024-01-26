@@ -154,8 +154,12 @@ bool fd_usable(fd_t fd) {
     return fd >= 0 && Handles[fd] != NULL && Handles[fd]->used;
 }
 
+bool fd_isfile(fd_t fd) {
+    return Handles[fd]->f->type == F;
+}
+
 bool fd_readable(fd_t fd) {
-    return !(Handles[fd]->flags & O_WRONLY) || Handles[fd]->flags & O_RDWR;
+    return !(Handles[fd]->flags & O_WRONLY);
 }
 
 bool fd_writable(fd_t fd) {
@@ -282,7 +286,7 @@ stat rclose(fd_t fd) { // Close a file descriptor.
 // EBADF:  `fd` is not a valid file descriptor or is not open for writing.
 // EISDIR: `fd` refers to a directory.
 ssize_t rwrite(fd_t fd, const void* buf, size_t count) { // Write to a file descriptor.
-    if (!(fd_usable(fd) && Handles[fd]->f->type == F && fd_writable(fd))) {
+    if (!(fd_usable(fd) && fd_isfile(fd) && fd_writable(fd))) {
         return FAILURE;
     }
     seek_overflow(fd);
@@ -299,7 +303,7 @@ ssize_t rwrite(fd_t fd, const void* buf, size_t count) { // Write to a file desc
 // EBADF:  `fd` is not a valid file descriptor or is not open for reading.
 // EISDIR: `fd` refers to a directory.
 ssize_t rread(fd_t fd, void* buf, size_t count) { // Read from a file descriptor.
-    if (!(fd_usable(fd) && Handles[fd]->f->type == F && fd_readable(fd))) {
+    if (!(fd_usable(fd) && fd_isfile(fd) && fd_readable(fd))) {
         return FAILURE;
     }
     size_t count_to_read = count;
@@ -321,7 +325,7 @@ ssize_t rread(fd_t fd, void* buf, size_t count) { // Read from a file descriptor
 // ERRORS
 // EINVAL: `whence` is not valid.
 off_t rseek(fd_t fd, off_t offset, whence_t whence) { // Reposition read/write file offset.
-    if (!(fd_usable(fd) && Handles[fd]->f->type == F)) {
+    if (!(fd_usable(fd) && fd_isfile(fd))) {
         return FAILURE;
     }
     switch (whence) {
