@@ -70,22 +70,13 @@ Node* find_parent(const char* pathname) {
     return parent;
 }
 
-Node* create_node(Node* parent, const char* name, bool is_dir) {
+Node* create_node(Node* parent, const char* name) {
     if (!is_valid_name(name) || existed_index(parent, name) != FAILURE) {
         return NULL;
     }
     Node *node = malloc(sizeof(Node));
     node->name = malloc(strlen(name) + 1);
     strcpy(node->name, name);
-    if (is_dir) {
-        node->type = D;
-        node->nchilds = 0;
-        node->childs = NULL;
-    } else {
-        node->type = F;
-        node->size = 0;
-        node->content = NULL;
-    }
     if (parent != NULL) {
         parent->nchilds++;
         parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node*));
@@ -95,11 +86,23 @@ Node* create_node(Node* parent, const char* name, bool is_dir) {
 }
 
 Node* create_dir(Node* parent, const char* name) {
-    return create_node(parent, name, true);
+    Node *dir = create_node(parent, name);
+    if (dir != NULL) {
+        dir->type = D;
+        dir->nchilds = 0;
+        dir->childs = NULL;
+    }
+    return dir;
 }
 
 Node* create_file(Node* parent, const char* name) {
-    return create_node(parent, name, false);
+    Node *file = create_node(parent, name);
+    if (file != NULL) {
+        file->type = F;
+        file->size = 0;
+        file->content = NULL;
+    }
+    return file;
 }
 
 char* get_basename(const char* pathname) {

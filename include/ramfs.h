@@ -55,7 +55,7 @@ typedef struct Handle {
 // Auxiliary functions
 Node* find          (const char* pathname);
 Node* find_parent   (const char* pathname);
-Node* create_node   (Node* parent, const char* name, bool is_dir);
+Node* create_node   (Node* parent, const char* name);
 Node* create_dir    (Node* parent, const char* name);
 Node* create_file   (Node* parent, const char* name);
 char* get_basename  (const char* pathname);

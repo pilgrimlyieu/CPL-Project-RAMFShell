@@ -1,8 +1,10 @@
 # CPL Project RAMFShell
 
-> [原 README](./README.origin.md)，[项目框架仓库](https://git.nju.edu.cn/KYCoraxxx/ramfshell)。
+> [原 README](./README.origin.md)
+> 
+> [项目框架仓库](https://git.nju.edu.cn/KYCoraxxx/ramfshell)。
 
-**本 README 可能在 GFM 显示效果不是很好，同时内容不会同步更新，建议去[相应博文](https://pilgrimlyieu.github.io/2024/01/cpl-project-review)查看。**
+**本 README 可能在 GFM 显示效果不是很好，例如一些特殊语法可能不支持，以及代码块不支持标题和链接（而且还破坏了高亮），同时内容不会同步更新，建议去[相应博文](https://pilgrimlyieu.github.io/2024/01/cpl-project-review)查看。**
 
 ## 前言
 
@@ -60,7 +62,7 @@ WSL 的好处不必多说了，跟 Windows 衔接好、编译执行快…我在�
 
 我的 `.vscode` 有四个文件，一一来介绍一下。
 
-```json settings.json
+```json settings.json https://github.com/pilgrimlyieu/CPL-Project-RAMFShell/blob/main/.vscode/settings.json settings.json
 {
     "C_Cpp.codeAnalysis.clangTidy.checks.disabled": [
         "clang-analyzer-security.insecureAPI.strcpy",
@@ -71,7 +73,7 @@ WSL 的好处不必多说了，跟 Windows 衔接好、编译执行快…我在�
 
 `settings.json` 禁掉了两个检查，因为第一个检查会警告我 `strcpy` 不安全，第二个检查会警告我 `strncpy` `memset` `memcpy` 等等不安全。但我一定是要用的，而这些检查挺烦人的，就关掉了。
 
-```json c_cpp_properties.json
+```json c_cpp_properties.json https://github.com/pilgrimlyieu/CPL-Project-RAMFShell/blob/main/.vscode/c_cpp_properties.json c_cpp_properties.json
 {
     "configurations": [
         {
@@ -111,7 +113,7 @@ WSL 的好处不必多说了，跟 Windows 衔接好、编译执行快…我在�
 
 `cStandard` 和 `compilerArgs` 抄的 OJ 上面的。大致含义：`-O2` 是开启二级优化，`-lm` 是链接数学库，`-march=native` 也是优化，`-fno-strict-aliasing` 是禁用严格别名规则，`-Wall` 是开启所有警告，`-fdiagnostics-color=always` 是开启彩色信息输出。
 
-```json launch.json
+```json launch.json https://github.com/pilgrimlyieu/CPL-Project-RAMFShell/blob/main/.vscode/launch.json launch.json
 {
     "version": "0.2.0",
     "configurations": [
@@ -135,7 +137,7 @@ WSL 的好处不必多说了，跟 Windows 衔接好、编译执行快…我在�
 
 `launch.json` 是调试配置文件。取了个朴实无华的名字 `Debug`。执行的目标程序是 `ramfs-shell`，执行前先执行一个 task 叫做 `C Project Build`。
 
-```json tasks.json
+```json tasks.json https://github.com/pilgrimlyieu/CPL-Project-RAMFShell/blob/main/.vscode/tasks.json tasks.json
 {
     "tasks": [
         {
@@ -211,7 +213,7 @@ WSL 的好处不必多说了，跟 Windows 衔接好、编译执行快…我在�
 
 一开始就打算了最后要把项目传到 GitHub，如果是默认的 compile 自动 commit，那 commits history 就毫无用处了。因此一开始就禁掉。这个早在开始写项目之前大半个月就弄了，去年年底就做了。
 
-```diff
+```diff Makefile https://github.com/pilgrimlyieu/CPL-Project-RAMFShell/commit/acf56cf043deab7fd207c09b813d094083311f0c acf56cf
 diff --git a/Makefile b/Makefile
 index 13ed87c..9985dea 100644
 --- a/Makefile
@@ -233,7 +235,7 @@ index 13ed87c..9985dea 100644
 
 #### 提交
 
-```makefile Makefile
+```makefile Makefile https://github.com/pilgrimlyieu/CPL-Project-RAMFShell/blob/main/Makefile#L44-L52 Makefile
 submit:
 	$(eval TEMP := $(shell mktemp -d))
 	$(eval BASE := $(shell basename $(CURDIR)))
@@ -251,7 +253,7 @@ submit:
 
 TOKEN 要保密，而 Makefile 又是要 commit 的。因此根目录下有一个 `TOKEN` 文件，里面写了 TOKEN，然后 Makefile 里面就是读取这个文件。
 
-```makefile Makefile
+```makefile Makefile https://github.com/pilgrimlyieu/CPL-Project-RAMFShell/blob/main/Makefile#L4 Makefile
 TOKEN := $(shell cat TOKEN)
 ```
 
@@ -261,7 +263,7 @@ TOKEN := $(shell cat TOKEN)
 
 然后自己加了一点测试
 
-```makefile Makefile
+```makefile Makefile https://github.com/pilgrimlyieu/CPL-Project-RAMFShell/blob/main/Makefile#L11-L29 Makefile
 test_address:
 	@clang -fsanitize=address -fno-omit-frame-pointer -ftrapv -Wall -fdiagnostics-color=always -g -std=c17 -O2 -I$(INC_PATH) main.c fs/ramfs.c sh/shell.c -o ramfs-shell
 	@./ramfs-shell
@@ -289,7 +291,7 @@ test_thread:
 
 给了五个样例，要调试的话一个一个自己换太麻烦了，因此让 Copilot 写了个脚本自动化，甚至还有 Usage。样例全放在 `sample` 文件夹（我自己加了个测试，所以是六个）。能看懂大概，但让我自己写肯定不会写。使用前先 `chmod +x use.sh`。
 
-```bash use.sh
+```bash use.sh https://github.com/pilgrimlyieu/CPL-Project-RAMFShell/blob/main/use.sh use.sh
 #!/bin/bash
 
 # chmod +x use.sh
@@ -325,7 +327,7 @@ cp sample/$1.c main.c
 
 等到后面所有样例都过了，进入修 bug 环节，就需要对全部测试跑一遍了。同时即使答案正确，也可能有内存泄漏等问题，需要用 Sanitizer 检查。但是 Sanitizer 会大大降低程序运行速度，因此用了两个参数，一个是 `std` 一个是 `pro`，对应基础和高级测试，默认无参数是标准测试。还可以指定测试哪个样例，不指定就是全部。也是 Copilot 写的，也是有 Usage 的，同样的使用前先 `chmod +x check.sh`。
 
-```bash check.sh
+```bash check.sh https://github.com/pilgrimlyieu/CPL-Project-RAMFShell/blob/main/check.sh check.sh
 #!/bin/bash
 
 # chmod +x check.sh
@@ -461,13 +463,13 @@ cd ..
 
 那 x 代表的数字是什么意思的？
 
-我查了一下，1 个影子字节（Shadow Byte）对应 8 个字节的内存，后面的数字如果是 00，代表这 8 个字节都可「寻址」，也就是说都可用，如果是部分可用，比如说 3 个可寻址，那就是 03。8 个好像是因为为了「对齐」，以方便寻址？
+我查了一下，1 个影子字节（Shadow Byte）对应 8 个字节的内存，后面的数字如果是 00，代表这 8 个字节都可「寻址」，也就是说都可用，如果是前部分可用，比如说只有前三个 3 个可寻址，那就是 03。是 8 个的原因好像是因为为了「对齐」，以方便寻址？
 
 错误发生在被圈出来的 05，数了一下有 5 个 00，1 个 05，也就是 45 个字节可寻址，但是呢上面却写了 "READ of size 46 at ..."，也就是说，访问越界了。
 
 再看一看发生错误的代码
 
-```c
+```c shell.c https://github.com/pilgrimlyieu/CPL-Project-RAMFShell/blob/31781e7f076f0d998e94e21d472b3625db284d01/sh/shell.c#L17-L23 31781e7
     Node* rc = find("/home/ubuntu/.bashrc");
     if (rc == NULL) {
         return;
@@ -479,7 +481,7 @@ cd ..
 
 这个就是下面会说的一个问题——非字符串使用字符串操作的函数。`rc->content` 是 `void*` 类型的，它在赋值时用的是 `memcpy`，不一定会带有 '\0'，所以 `strcpy` 会一直往后读，然后到了 Redzone 就报错了。
 
-那为什么不开 Sanitizer 就不会报错呢？我猜大概是默认时外围内存的值都是 0，所以不会报错。但是开了 Sanitizer 就会检查，发现这个内存是不可访问的，就报错了。
+那为什么不开 Sanitizer 就不会报错呢？我猜大概是默认时外围内存的值都是 0，相当于帮你贴心地终止了字符串，所以不会一直读下去。但是开了 Sanitizer 就会检查，一旦你要访问接下来的内存，就会发现这个内存是不可访问的，所以报错了。
 
 由此可见，还是有必要开 Sanitizer 来确保程序的安全性。当然其实用不着去分析下面那个图，我看了下面那个图也没啥用，关键其实知道错误位置就够了，只不过多了解一点也不是坏事。
 
@@ -497,19 +499,19 @@ cd ..
 
 例如类型定义，尽管都是 `int`，但我还是用 `fd_t` `flags_t` `whence_t` `stat` 区分了文件描述符、标志、偏移起始位置、返回状态值。这样可以使不同 `int` 更加清楚明白。
 
-```c ramfs.h
+```c ramfs.h https://github.com/pilgrimlyieu/CPL-Project-RAMFShell/blob/main/include/ramfs.h#L29-L35 ramfs.h
 typedef intptr_t  ssize_t;
 typedef uintptr_t size_t;
 typedef long      off_t;
 typedef int       fd_t;
 typedef int       flags_t;
 typedef int       whence_t;
-typedef int       stat;
+typedef char      stat;
 ```
 
 然后是节点使用了 `Node` 而非 `node`，同时改了点字段名。
 
-```c ramfs.h
+```c ramfs.h https://github.com/pilgrimlyieu/CPL-Project-RAMFShell/blob/main/include/ramfs.h#L37-L46 ramfs.h
 typedef struct Node {
     enum {F, D} type;
     char *name;
@@ -526,7 +528,7 @@ typedef struct Node {
 
 然后是 `FD`，我改成了 `Handle`。
 
-```c ramfs.h
+```c ramfs.h https://github.com/pilgrimlyieu/CPL-Project-RAMFShell/blob/main/include/ramfs.h#L48-L53 ramfs.h
 typedef struct Handle {
     off_t offset;
     Node *f;
@@ -539,7 +541,7 @@ typedef struct Handle {
 
 设定了一些宏，表示状态。
 
-```c ramfs.h
+```c ramfs.h https://github.com/pilgrimlyieu/CPL-Project-RAMFShell/blob/main/include/ramfs.h#L21-L27 ramfs.h
 extern stat FIND_LEVEL;
 
 #define SUCCESS  0
@@ -559,11 +561,11 @@ extern stat FIND_LEVEL;
 
 上面已经能看出来，我会对齐宏以及类型定义，使得更美观清晰。不仅如此，我还会对齐函数：
 
-```c ramfs.h
+```c ramfs.h https://github.com/pilgrimlyieu/CPL-Project-RAMFShell/blob/main/include/ramfs.h#L55-L84 ramfs.h
 // Auxiliary functions
 Node* find          (const char* pathname);
 Node* find_parent   (const char* pathname);
-Node* create_node   (Node* parent, const char* name, bool is_dir);
+Node* create_node   (Node* parent, const char* name);
 Node* create_dir    (Node* parent, const char* name);
 Node* create_file   (Node* parent, const char* name);
 char* get_basename  (const char* pathname);
@@ -591,7 +593,7 @@ void    init_ramfs  ();
 void    close_ramfs ();
 ```
 
-```c shell.h
+```c shell.h https://github.com/pilgrimlyieu/CPL-Project-RAMFShell/blob/main/include/shell.h#L3-L15 shell.h
 // Auxiliary functions
 void read_path   (void);
 void print_error (const char* cmd, const char* custom, const char* pathname);
@@ -611,7 +613,7 @@ void close_shell ();
 
 还有一些定义，也会对齐：
 
-```c ramfs.c
+```c ramfs.c https://github.com/pilgrimlyieu/CPL-Project-RAMFShell/blob/main/fs/ramfs.c#L11-L15 ramfs.c
 Node   *ROOT                = NULL;
 Handle *Handles[NRFD]       = {NULL};
 fd_t    available_fds[NRFD] = {0};
@@ -621,7 +623,7 @@ stat    FIND_LEVEL          = SUCCESS;
 
 可能会注意到，函数声明以及参数类型，如果是指针，我都是将 `*` 挨着类型名写的，而不是变量名。但是如果看其他地方定义，比如下面定义了 `ROOT`，我就会将 `*` 挨着变量名写。这是因为，例如 `char* func(Node* node);`，我的意思是，这个函数接收一个 `Node*` 类型的参数 `node`，返回一个 `char*` 类型的值。而 `Node *ROOT;` 则是这是一个指向 `Node` 类型的指针变量。
 
-```c ramfs.h
+```c ramfs.h https://github.com/pilgrimlyieu/CPL-Project-RAMFShell/blob/main/include/ramfs.h#L87 ramfs.h
 extern Node *ROOT;
 ```
 
@@ -659,7 +661,7 @@ extern Node *ROOT;
 
 后面惊觉，看了文档说了 "It does not canonicalize path names."，于是我这样改：
 
-```diff
+```diff shell.c https://github.com/pilgrimlyieu/CPL-Project-RAMFShell/commit/ef6ab77a3a89760d737add8f4dd265e350272ec2#diff-635a52f8003bae3b77535ca2085d8f895835d7a45a6abd85cd59753dbabbff36L214-R208 ef6ab77
 - char *basic = basic_directory(env_path);
 - printf("%s/%s\n", basic, cmd);
 - free(basic);
