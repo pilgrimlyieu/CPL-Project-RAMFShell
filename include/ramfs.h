@@ -49,7 +49,6 @@ typedef struct Handle {
     off_t offset;
     Node *f;
     flags_t flags;
-    bool used;
 } Handle;
 
 // Auxiliary functions

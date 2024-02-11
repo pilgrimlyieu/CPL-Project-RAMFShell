@@ -154,7 +154,7 @@ bool is_valid_path(const char* pathname) {
 }
 
 bool fd_usable(fd_t fd) {
-    return fd >= 0 && Handles[fd] != NULL && Handles[fd]->used;
+    return fd >= 0 && Handles[fd] != NULL;
 }
 
 bool fd_isfile(fd_t fd) {
@@ -255,8 +255,7 @@ fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a 
         } else {
             return FAILURE;
         }
-    }
-    if (node->type == F && pathname[strlen(pathname) - 1] == '/') {
+    } else if (node->type == F && pathname[strlen(pathname) - 1] == '/') {
         return FAILURE;
     }
     Handle *handle = malloc(sizeof(Handle));
@@ -265,7 +264,6 @@ fd_t ropen(const char* pathname, flags_t flags) { // Open and possibly create a 
     handle->offset = 0;
     handle->f      = node;
     handle->flags  = flags;
-    handle->used   = true;
     if (node->type == F) {
         pre_fd(fd);
     }
@@ -278,7 +276,6 @@ stat rclose(fd_t fd) { // Close a file descriptor.
     if (!fd_usable(fd)) {
         return FAILURE;
     }
-    // Handles[fd]->used = false;
     free(Handles[fd]);
     Handles[fd] = NULL;
     available_fds[++fds_top] = fd;

@@ -162,19 +162,19 @@ stat stouch(const char* pathname) { // Change file timestamps. If file doesn't e
 
 stat secho(const char* content) { // Equivalent to `echo <content>`. No need to support escape sequences. Have to support environment variables.
     print("echo %s\n", content);
-    char *output = calloc(strlen(content) + 1, sizeof(char));
+    char *output = malloc(strlen(content) + 1);
     bool escape = false;
-    int j = 0;
-    for (int i = 0; content[i] != '\0'; ) {
+    for (int i = 0, j = 0; content[i] != '\0'; ) {
         if (escape) {
             output[j++] = content[i++];
             escape = false;
         } else if (strncmp(content + i, "$PATH", 5) == 0) {
-            output = realloc(output, j + strlen(PATH) + 1);
-            memcpy(output + j, PATH, strlen(PATH));
-            output[j + strlen(PATH)] = '\0';
+            int len = strlen(PATH);
+            output = realloc(output, j + len + 1);
+            memcpy(output + j, PATH, len);
+            output[j + len] = '\0';
             i += 5;
-            j += strlen(PATH);
+            j += len;
         } else if (content[i] == '\\') {
             escape = true;
             i++;
