@@ -37,11 +37,10 @@ typedef char      stat;
 typedef struct Node {
     enum {F, D} type;
     char *name;
+    int size; // FILE: content size; DIR: child count
     // FILE
-    int size;
     void *content;
     // DIR
-    int nchilds;
     struct Node **childs;
 } Node;
 

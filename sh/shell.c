@@ -60,7 +60,7 @@ void print_error(const char* cmd, const char* custom, const char* pathname) {
 stat sls(const char* pathname) { // List directory contents.
     print("ls %s\n", pathname);
     if (*pathname == '\0') {
-        for (int i = 0; i < ROOT->nchilds; i++) {
+        for (int i = 0; i < ROOT->size; i++) {
             printf("%s ", ROOT->childs[i]->name);
         }
         putchar('\n');
@@ -72,7 +72,7 @@ stat sls(const char* pathname) { // List directory contents.
         return PROBLEM;
     } else {
         if (node->type == D) {
-            for (int i = 0; i < node->nchilds; i++) {
+            for (int i = 0; i < node->size; i++) {
                 printf("%s ", node->childs[i]->name);
             }
             putchar('\n');
@@ -164,7 +164,8 @@ stat secho(const char* content) { // Equivalent to `echo <content>`. No need to 
     print("echo %s\n", content);
     char *output = malloc(strlen(content) + 1);
     bool escape = false;
-    for (int i = 0, j = 0; content[i] != '\0'; ) {
+    int j = 0;
+    for (int i = 0; content[i] != '\0'; ) {
         if (escape) {
             output[j++] = content[i++];
             escape = false;
@@ -182,6 +183,7 @@ stat secho(const char* content) { // Equivalent to `echo <content>`. No need to 
             output[j++] = content[i++];
         }
     }
+    output[j] = '\0';
     puts(output);
     free(output);
     return SUCCESS;

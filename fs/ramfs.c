@@ -77,10 +77,11 @@ Node* create_node(Node* parent, const char* name) {
     Node *node = malloc(sizeof(Node));
     node->name = malloc(strlen(name) + 1);
     strcpy(node->name, name);
+    node->size = 0;
     if (parent != NULL) {
-        parent->nchilds++;
-        parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node*));
-        parent->childs[parent->nchilds - 1] = node;
+        parent->size++;
+        parent->childs = realloc(parent->childs, parent->size * sizeof(Node*));
+        parent->childs[parent->size - 1] = node;
     }
     return node;
 }
@@ -89,7 +90,6 @@ Node* create_dir(Node* parent, const char* name) {
     Node *dir = create_node(parent, name);
     if (dir != NULL) {
         dir->type = D;
-        dir->nchilds = 0;
         dir->childs = NULL;
     }
     return dir;
@@ -99,7 +99,6 @@ Node* create_file(Node* parent, const char* name) {
     Node *file = create_node(parent, name);
     if (file != NULL) {
         file->type = F;
-        file->size = 0;
         file->content = NULL;
     }
     return file;
@@ -118,7 +117,7 @@ char* get_basename(const char* pathname) {
 
 int existed_index(const Node* dir, const char* name) {
     if (dir != NULL) {
-        for (int i = 0; i < dir->nchilds; i++) {
+        for (int i = 0; i < dir->size; i++) {
             if (strcmp(dir->childs[i]->name, name) == 0) {
                 return i;
             }
@@ -193,15 +192,15 @@ void seek_overflow(fd_t fd) {
 
 void pluck_node(Node* parent, Node* node) { // The node must be FILE or empty DIR.
     int index = existed_index(parent, node->name);
-    parent->nchilds--;
-    if (index != parent->nchilds) {
-        parent->childs[index] = parent->childs[parent->nchilds];
+    parent->size--;
+    if (index != parent->size) {
+        parent->childs[index] = parent->childs[parent->size];
     }
-    if (parent->nchilds == 0) {
+    if (parent->size == 0) {
         free(parent->childs);
         parent->childs = NULL;
     } else {
-        parent->childs = realloc(parent->childs, parent->nchilds * sizeof(Node*));
+        parent->childs = realloc(parent->childs, parent->size * sizeof(Node*));
     }
     if (node->type == F) {
         free(node->content);
@@ -217,7 +216,7 @@ void remove_root(Node* root) { // Remove root and all its childs thoroughly.
     while (top > 0) {
         Node* current = stack[--top];
         if (current->type == D) {
-            for (int i = 0; i < current->nchilds; i++) {
+            for (int i = 0; i < current->size; i++) {
                 stack[top++] = current->childs[i];
             }
             free(current->childs);
@@ -380,7 +379,7 @@ stat rmkdir(const char* pathname) { // Create a directory.
 stat rrmdir(const char* pathname) { // Delete a directory.
     Node *parent = find_parent(pathname);
     Node *dir;
-    if (parent == NULL || (dir = find(pathname)) == NULL || dir->type != D || dir->nchilds != 0) { // ENOENT, ENOTDIR, ENOTEMPTY
+    if (parent == NULL || (dir = find(pathname)) == NULL || dir->type != D || dir->size != 0) { // ENOENT, ENOTDIR, ENOTEMPTY
         return FAILURE;
     }
     pluck_node(parent, dir);
