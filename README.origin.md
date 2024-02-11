@@ -392,7 +392,7 @@ export PATH=/path//to/:$PATH
 
 对于所有数据点，⽂件操作读写的总字节数不会超过 10GiB。时限将给到⼀个⾮常可观的量级。错误将会分散在各个数据点中，你需要保证你的 API 能正确地判断错误的情况并按照要求的返回值退出。各数据点的性质：
 
-1. 如原始的 main.c 
+1. 参考样例2
 2. 根⽬录下少量⽂件创建 + ropen + rwrite + rclose 
 3. 在 2 的基础上，测试 O_APPEND，rseek 
 4. 在 3 的基础上扩⼤规模 
@@ -560,6 +560,15 @@ int main() {
   strcat(ans, content);
   strcat(ans, ct);
   assert(!strcmp(buf, ans));
+
+  fd = ropen("/home/ubuntu/text.txt", O_CREAT | O_RDWR);
+  assert(rwrite(fd, "hello", 5) == 5);
+  assert(rseek(fd, 7, SEEK_SET) == 7);
+  assert(rwrite(fd, "world", 5) == 5);
+  char buf2[100] = {0};
+  assert(rseek(fd, 0, SEEK_SET) == 0);
+  assert(rread(fd, buf2, 100) == 12);
+  assert(!memcmp(buf2, "hello\0\0world", 12));
 
   init_shell();
 
