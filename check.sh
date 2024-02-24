@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# chmod +x check.sh
+# DEPRECATED: It seems that there are some bugs, and Bash scripts are unmaintainable.
 
 # 定义样例数量
 SAMPLE_COUNT=6

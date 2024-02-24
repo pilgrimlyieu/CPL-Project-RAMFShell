@@ -26,9 +26,7 @@ void read_path(void) {
         if (strncmp(line, "export PATH=", 12) == 0) { // 12 = strlen("export PATH=")
             char *path = strstr(line, "$PATH");
             if (path == NULL) {
-                if (PATH != NULL) {
-                    free(PATH);
-                }
+                free(PATH);
                 PATH = malloc(strlen(line + 12) + 1);
                 strcpy(PATH, line + 12);
             } else {
@@ -228,7 +226,6 @@ void init_shell() {
 }
 
 void close_shell() {
-    if (PATH != NULL) {
-        free(PATH);
-    }
+    free(PATH);
+    PATH = NULL;
 }

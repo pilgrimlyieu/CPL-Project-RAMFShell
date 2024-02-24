@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# chmod +x use.sh
-
 # 定义样例数量
 SAMPLE_COUNT=6
 
